@@ -313,16 +313,34 @@ function svgTextLines(label, maxChars=24){
 }
 
 function heatCellColor(value, maxAbs){
-  const blue = [42, 85, 205];
-  const white = [255, 255, 255];
-  const red = [226, 38, 46];
-  let col = white;
-  if(Number.isFinite(value) && value > 0){
-    const t = clamp(Math.log(value) / maxAbs, -1, 1);
-    if(t < 0) col = mixColor(white, blue, Math.abs(t));
-    if(t > 0) col = mixColor(white, red, Math.abs(t));
-  }
-  return rgb(col);
+  const cool = [224, 232, 246];
+  const coolStrong = [49, 84, 171];
+  const neutral = [255, 255, 255];
+  const warm = [249, 229, 222];
+  const warmStrong = [175, 87, 70];
+
+  if(!Number.isFinite(value) || value <= 0) return rgb(neutral);
+  const t = clamp(Math.log(value) / maxAbs, -1, 1);
+  if(t < 0) return rgb(mixColor(cool, coolStrong, Math.abs(t)));
+  if(t > 0) return rgb(mixColor(warm, warmStrong, Math.abs(t)));
+  return rgb(neutral);
+}
+
+function heatTextColor(value){
+  if(!Number.isFinite(value) || value <= 0) return "#0d244f";
+  const a = Math.abs(Math.log(value));
+  return a > 1.35 ? "#ffffff" : "#0d244f";
+}
+
+function svgWrappedText(lines, x, y, opts={}){
+  const anchor = opts.anchor || "middle";
+  const cls = opts.cls || "heatLabel";
+  const lineH = opts.lineH || 15;
+  const extra = opts.extra || "";
+  const startY = y - ((lines.length - 1) * lineH) / 2;
+  return lines.map((line, k)=>
+    `<text class="${cls}" x="${x}" y="${startY + k*lineH}" text-anchor="${anchor}" ${extra}>${escapeHtml(line)}</text>`
+  ).join("");
 }
 
 function drawMatrixHeatmap(containerId, labels, A){
@@ -330,13 +348,16 @@ function drawMatrixHeatmap(containerId, labels, A){
   if(!root) return;
 
   const n = labels.length;
-  const cell = n <= 3 ? 170 : 132;
-  const left = n <= 3 ? 230 : 260;
-  const top = 116;
-  const right = 24;
-  const bottom = 28;
-  const W = left + n * cell + right;
-  const H = top + n * cell + bottom;
+  const compact = n > 3;
+  const cell = compact ? 118 : 148;
+  const rowHeaderW = compact ? 250 : 240;
+  const topHeaderH = compact ? 86 : 78;
+  const pad = 28;
+  const legendH = 48;
+  const gridX = pad + rowHeaderW;
+  const gridY = pad + topHeaderH;
+  const W = gridX + n * cell + pad;
+  const H = gridY + n * cell + pad + legendH;
 
   let maxAbs = 0.0;
   for(let i=0;i<n;i++){
@@ -347,52 +368,87 @@ function drawMatrixHeatmap(containerId, labels, A){
   }
   if(maxAbs === 0) maxAbs = 1;
 
-  const colLabels = labels.map(x => svgTextLines(x, n <= 3 ? 22 : 18));
-  const rowLabels = labels.map(x => svgTextLines(x, n <= 3 ? 26 : 22));
+  const colLabels = labels.map(x => svgTextLines(x, compact ? 16 : 20));
+  const rowLabels = labels.map(x => svgTextLines(x, compact ? 24 : 26));
+  const matrixWidth = n * cell;
+  const matrixHeight = n * cell;
+  const legendX = gridX;
+  const legendY = gridY + matrixHeight + 24;
+  const legendW = Math.min(360, matrixWidth);
+  const legendStops = [
+    { x:0, c:"#3154ab" },
+    { x:0.5, c:"#ffffff" },
+    { x:1, c:"#af5746" }
+  ];
 
   let svg = `
-    <svg class="heatSvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(String(labels.length))} by ${escapeHtml(String(labels.length))} comparison matrix">
-      <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="#ffffff"/>
-      <g class="heatGrid">
+    <svg class="heatSvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Matrice di confronto AHP ${escapeHtml(String(n))} per ${escapeHtml(String(n))}">
+      <defs>
+        <filter id="heatShadow" x="-8%" y="-8%" width="116%" height="116%">
+          <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0d244f" flood-opacity="0.10"/>
+        </filter>
+        <linearGradient id="heatLegendGradient" x1="0" x2="1" y1="0" y2="0">
+          ${legendStops.map(s => `<stop offset="${s.x*100}%" stop-color="${s.c}"/>`).join("")}
+        </linearGradient>
+      </defs>
+
+      <rect class="heatCanvasBg" x="1" y="1" width="${W-2}" height="${H-2}" rx="22"/>
+      <g filter="url(#heatShadow)">
+        <rect class="heatGridBg" x="${pad}" y="${pad}" width="${rowHeaderW + matrixWidth}" height="${topHeaderH + matrixHeight}" rx="16"/>
+      </g>
+
+      <rect class="heatCorner" x="${pad}" y="${pad}" width="${rowHeaderW}" height="${topHeaderH}" rx="16"/>
+      <rect class="heatCornerMask" x="${pad + rowHeaderW - 16}" y="${pad}" width="16" height="${topHeaderH}"/>
+      <rect class="heatCornerMask" x="${pad}" y="${pad + topHeaderH - 16}" width="${rowHeaderW}" height="16"/>
+      <text class="heatAxisTitle" x="${pad + 18}" y="${pad + 31}" text-anchor="start">Righe</text>
+      <text class="heatAxisSub" x="${pad + 18}" y="${pad + 54}" text-anchor="start">Elemento confrontato</text>
+      <text class="heatAxisTitle" x="${gridX + 14}" y="${pad + 31}" text-anchor="start">Colonne</text>
+      <text class="heatAxisSub" x="${gridX + 14}" y="${pad + 54}" text-anchor="start">Elemento di riferimento</text>
   `;
 
   for(let j=0;j<n;j++){
-    const cx = left + j*cell + cell/2;
-    const cy = top - 42;
-    svg += `<g transform="translate(${cx},${cy}) rotate(-28)">`;
-    colLabels[j].forEach((line,k)=>{
-      svg += `<text class="heatLabel heatColLabel" x="0" y="${k*15}" text-anchor="middle">${escapeHtml(line)}</text>`;
-    });
-    svg += `</g>`;
+    const x = gridX + j*cell;
+    const cx = x + cell/2;
+    const isLast = j === n-1;
+    svg += `<rect class="heatHeaderCell" x="${x}" y="${pad}" width="${cell}" height="${topHeaderH}" ${isLast ? `rx="16"` : ""}/>`;
+    svg += svgWrappedText(colLabels[j], cx, pad + topHeaderH/2 + 4, { cls:"heatColHeader", lineH:14 });
   }
 
   for(let i=0;i<n;i++){
-    const y = top + i*cell + cell/2;
-    rowLabels[i].forEach((line,k)=>{
-      const offset = (k - (rowLabels[i].length - 1) / 2) * 15;
-      svg += `<text class="heatLabel heatRowLabel" x="${left - 16}" y="${y + offset}" text-anchor="end">${escapeHtml(line)}</text>`;
-    });
+    const y = gridY + i*cell;
+    const cy = y + cell/2;
+    const isLast = i === n-1;
+    svg += `<rect class="heatRowHeaderCell" x="${pad}" y="${y}" width="${rowHeaderW}" height="${cell}" ${isLast ? `rx="16"` : ""}/>`;
+    svg += svgWrappedText(rowLabels[i], pad + rowHeaderW - 18, cy + 5, { cls:"heatRowHeader", anchor:"end", lineH:15 });
   }
 
   for(let i=0;i<n;i++){
     for(let j=0;j<n;j++){
       const value = Number(A[i][j]);
-      const x = left + j*cell;
-      const y = top + i*cell;
+      const x = gridX + j*cell;
+      const y = gridY + i*cell;
       const fill = heatCellColor(value, maxAbs);
+      const color = heatTextColor(value);
       const text = Number.isFinite(value) ? value.toFixed(2) : "";
+      const diag = i === j;
       svg += `
         <g class="heatCellGroup">
-          <rect class="heatCell" x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${fill}">
+          <rect class="heatCell ${diag ? "heatDiagonal" : ""}" x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${fill}">
             <title>${escapeHtml(labels[i])} / ${escapeHtml(labels[j])}: ${escapeHtml(text)}</title>
           </rect>
-          <text class="heatValue" x="${x + cell/2}" y="${y + cell/2}" text-anchor="middle" dominant-baseline="middle">${escapeHtml(text)}</text>
+          <text class="heatValue" x="${x + cell/2}" y="${y + cell/2 - 2}" text-anchor="middle" dominant-baseline="middle" fill="${color}">${escapeHtml(text)}</text>
         </g>
       `;
     }
   }
 
   svg += `
+      <g class="heatLegendSvg" transform="translate(${legendX},${legendY})">
+        <text class="heatLegendTitle" x="0" y="0">Scala cromatica</text>
+        <rect x="0" y="12" width="${legendW}" height="12" rx="6" fill="url(#heatLegendGradient)"/>
+        <text class="heatLegendText" x="0" y="42" text-anchor="start">preferenza reciproca</text>
+        <text class="heatLegendText" x="${legendW/2}" y="42" text-anchor="middle">equivalenza</text>
+        <text class="heatLegendText" x="${legendW}" y="42" text-anchor="end">preferenza diretta</text>
       </g>
     </svg>
   `;

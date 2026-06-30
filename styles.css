@@ -666,3 +666,113 @@ body{
   font-size: 13px;
   font-weight: 700;
 }
+
+/* ---- Improved academic SVG matrix ---- */
+.heatSvgBox{
+  padding:10px;
+  border:1px solid rgba(37,49,127,0.12);
+  background:#ffffff;
+}
+
+.heatSvg{
+  width:100%;
+  min-width:860px;
+  max-width:1180px;
+  margin:0 auto;
+  height:auto;
+  display:block;
+  shape-rendering:geometricPrecision;
+  text-rendering:geometricPrecision;
+}
+
+.heatCanvasBg{
+  fill:#ffffff;
+}
+
+.heatGridBg{
+  fill:#ffffff;
+}
+
+.heatCorner{
+  fill:#0d244f;
+}
+
+.heatCornerMask{
+  fill:#0d244f;
+}
+
+.heatHeaderCell{
+  fill:#0d244f;
+  stroke:rgba(255,255,255,0.22);
+  stroke-width:1;
+}
+
+.heatRowHeaderCell{
+  fill:#f7f4f2;
+  stroke:rgba(37,49,127,0.14);
+  stroke-width:1;
+}
+
+.heatAxisTitle{
+  fill:#ffffff;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+.heatAxisSub{
+  fill:rgba(255,255,255,0.76);
+  font-size:12px;
+  font-weight:600;
+}
+
+.heatColHeader{
+  fill:#ffffff;
+  font-size:12px;
+  font-weight:800;
+}
+
+.heatRowHeader{
+  fill:#0d244f;
+  font-size:13px;
+  font-weight:800;
+}
+
+.heatCell{
+  stroke:rgba(13,36,79,0.12);
+  stroke-width:1;
+  transition:stroke-width .15s ease, filter .15s ease;
+}
+
+.heatDiagonal{
+  stroke:rgba(13,36,79,0.26);
+}
+
+.heatCellGroup:hover .heatCell{
+  stroke:#af5746;
+  stroke-width:2.4;
+}
+
+.heatValue{
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size:15px;
+  font-weight:800;
+  paint-order:stroke;
+  stroke:rgba(255,255,255,0.26);
+  stroke-width:.8px;
+}
+
+.heatLegendTitle{
+  fill:#0d244f;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+.heatLegendText{
+  fill:#53607e;
+  font-size:11px;
+  font-weight:650;
+}
