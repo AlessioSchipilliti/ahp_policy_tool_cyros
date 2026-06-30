@@ -563,3 +563,62 @@ body{
     height:86px;
   }
 }
+
+/* ---- Header logo refinement ---- */
+.top.brandTop{
+  min-height:auto;
+  padding:24px 28px;
+}
+
+.brandLogos{
+  height:96px;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.brandLogo{
+  display:block;
+  object-fit:contain;
+}
+
+.interregLogo{
+  width:360px;
+  height:86px;
+  object-position:left center;
+}
+
+.itlLogo{
+  width:300px;
+  height:86px;
+  object-position:right center;
+}
+
+.brandTitleBlock{
+  padding-top:16px;
+}
+
+@media (max-width:980px){
+  .brandLogos{
+    height:78px;
+  }
+
+  .interregLogo,
+  .itlLogo{
+    width:calc(50% - 7px);
+    height:72px;
+  }
+}
+
+@media (max-width:640px){
+  .brandLogos{
+    height:auto;
+    align-items:flex-start;
+  }
+
+  .interregLogo,
+  .itlLogo{
+    width:100%;
+    height:74px;
+    object-position:left center;
+  }
+}
