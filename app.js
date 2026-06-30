@@ -279,58 +279,6 @@ function mixColor(c1, c2, t){
 }
 function rgb(arr){ return `rgb(${arr[0]},${arr[1]},${arr[2]})`; }
 
-function policyIcon(policyId){
-  const icons = {
-    p1: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M12 48h40"/>
-        <path d="M18 48V20m28 28V20"/>
-        <path d="M18 20c6 8 10 14 14 28"/>
-        <path d="M46 20c-6 8-10 14-14 28"/>
-        <path d="M12 32h40"/>
-        <path d="M24 16h16"/>
-      </svg>`,
-    p2: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <rect x="20" y="10" width="24" height="34" rx="5"/>
-        <path d="M23 20h18M23 33h18"/>
-        <circle cx="26" cy="49" r="3"/>
-        <circle cx="38" cy="49" r="3"/>
-        <path d="M18 56h28M24 44l-8 12m24-12l8 12"/>
-      </svg>`,
-    p3: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M16 44c18 0 32-14 34-32-18 2-32 16-32 34"/>
-        <path d="M20 44c8-10 16-18 28-28"/>
-        <path d="M28 36l-10-6M36 28l-4-12"/>
-        <circle cx="46" cy="46" r="6"/>
-        <path d="M46 40v6l4 2"/>
-      </svg>`,
-    p4: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="14" r="7"/>
-        <circle cx="16" cy="44" r="7"/>
-        <circle cx="48" cy="44" r="7"/>
-        <path d="M32 21v9M25 34l-6 5M39 34l6 5"/>
-        <path d="M25 44h14"/>
-      </svg>`
-  };
-  return icons[policyId] || icons.p1;
-}
-
-function policyMiniCard(policy){
-  return `
-    <div class="policyMiniCard">
-      <div class="policyIcon">${policyIcon(policy.id)}</div>
-      <div>
-        <div class="policyCode">${escapeHtml(policy.code)}</div>
-        <h3>${escapeHtml(policy.name)}</h3>
-        <p>${escapeHtml(policy.objective)}</p>
-      </div>
-    </div>
-  `;
-}
-
 function matrixHeatmap(canvasId, title){
   return `
     <div class="heatWrap">
@@ -584,7 +532,8 @@ function renderIntroPage(st){
     <div class="panelTitle">Policy e azioni</div>
     ${POLICIES.map(policy => `
       <div class="policyBlock">
-        ${policyMiniCard(policy)}
+        <h3>${escapeHtml(policy.code)}. ${escapeHtml(policy.name)}</h3>
+        <p class="muted">${escapeHtml(policy.objective)}</p>
         <ul class="actionList">
           ${policy.actions.map(a => `
             <li>
@@ -669,7 +618,8 @@ function renderPolicyPage(st){
   view.innerHTML = `
     <div class="panelTitle">Step 2, confronto azioni policy per policy</div>
     ${renderPolicyTabs(st)}
-    ${policyMiniCard(policy)}
+    <h2>${escapeHtml(policy.code)}. ${escapeHtml(policy.name)}</h2>
+    <p class="muted">${escapeHtml(policy.objective)}</p>
 
     <div class="divider"></div>
     <div class="panelTitle">Criterio applicato alle azioni</div>
@@ -760,88 +710,6 @@ function computePolicyResults(st, pIdx){
   return { criteria, actionSolves, scores, ranking };
 }
 
-
-function renderPriorityMatrix(st){
-  const allRows = POLICIES.flatMap(policy => policy.actions.map(action => ({
-    policyId: policy.id,
-    code: action.code,
-    name: action.name,
-    label: `${action.code} ${action.name}`
-  })));
-  const policyResults = POLICIES.map((_, pIdx) => computePolicyResults(st, pIdx));
-  const maxScore = Math.max(...policyResults.flatMap(r => r.scores), 0.00001);
-
-  const policyHeaders = POLICIES.map(policy => `
-    <th colspan="2" class="priorityPolicyHead">
-      <div class="priorityHeadContent">
-        <div class="priorityIcon">${policyIcon(policy.id)}</div>
-        <div>
-          <div>${escapeHtml(policy.code)}</div>
-          <span>${escapeHtml(policy.name)}</span>
-        </div>
-      </div>
-    </th>
-  `).join("");
-
-  const subHeaders = POLICIES.map(() => `<th>Priority</th><th>%</th>`).join("");
-
-  const rows = allRows.map(row => {
-    const cells = POLICIES.map((policy, pIdx) => {
-      const idx = policy.actions.findIndex(a => a.code === row.code);
-      if(idx < 0) return `<td class="emptyScore">0.000</td><td class="emptyScore">0.0%</td>`;
-      const score = policyResults[pIdx].scores[idx];
-      const intensity = Math.max(0.08, score / maxScore);
-      const pct = score * 100;
-      return `
-        <td class="scoreCell" style="--score:${intensity.toFixed(4)}">
-          <span>${score.toFixed(3)}</span>
-          <i style="width:${Math.max(8, pct).toFixed(1)}%"></i>
-        </td>
-        <td class="scorePct" style="--score:${intensity.toFixed(4)}">${pct.toFixed(1)}%</td>
-      `;
-    }).join("");
-    return `
-      <tr>
-        <th class="actionHead ${row.policyId}">
-          <span>${escapeHtml(row.code)}</span>
-          <strong>${escapeHtml(row.name)}</strong>
-        </th>
-        ${cells}
-      </tr>
-    `;
-  }).join("");
-
-  return `
-    <section class="priorityMatrixWrap">
-      <div class="priorityMatrixTitle">
-        <div>
-          <div class="panelTitle">Priority matrix</div>
-          <h2>AHP results, action priorities by policy</h2>
-          <p class="muted">Darker cells indicate higher priority within the final AHP score. Each policy column sums to 1.000.</p>
-        </div>
-        <div class="priorityLegend">
-          <span>low</span><i></i><span>high</span>
-        </div>
-      </div>
-      <div class="priorityScroll">
-        <table class="priorityMatrix">
-          <thead>
-            <tr><th class="actionsCorner">Actions</th>${policyHeaders}</tr>
-            <tr><th></th>${subHeaders}</tr>
-          </thead>
-          <tbody>${rows}</tbody>
-          <tfoot>
-            <tr>
-              <th>Total</th>
-              ${POLICIES.map(() => `<td>1.000</td><td>100.0%</td>`).join("")}
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </section>
-  `;
-}
-
 function renderResultsPage(st){
   const view = document.getElementById("view");
   if(!view) return;
@@ -856,25 +724,35 @@ function renderResultsPage(st){
     <div class="panelTitle">Pesi dei criteri</div>
     ${weightsTable(CRITERIA.map(c => c.name), crit.weights)}
     <div class="divider"></div>
-    ${renderPriorityMatrix(st)}
-    <div class="divider"></div>
     ${POLICIES.map((policy, pIdx) => {
       const res = computePolicyResults(st, pIdx);
       return `
         <div class="policyResult">
-          ${policyMiniCard(policy)}
+          <h3>${escapeHtml(policy.code)}. ${escapeHtml(policy.name)}</h3>
+          <p class="muted">${escapeHtml(policy.objective)}</p>
           <div class="small muted">
             ${CRITERIA.map((c, cIdx) => `${escapeHtml(c.name)}: ${crBadge(res.actionSolves[cIdx].cr)}`).join(" ")}
           </div>
-          <div class="resultRow">
-            <div class="panelTitle">Ranking azioni</div>
-            ${rankingTable(res.ranking)}
+          <div class="row resultRow">
+            <div>
+              <div class="panelTitle">Ranking azioni</div>
+              ${rankingTable(res.ranking)}
+            </div>
+            <div>
+              <canvas class="chart" id="chart_${policy.id}" width="900" height="320"></canvas>
+            </div>
           </div>
         </div>
       `;
     }).join("")}
   `;
 
+  setTimeout(()=>{
+    POLICIES.forEach((policy, pIdx)=>{
+      const res = computePolicyResults(st, pIdx);
+      drawBarChart(`chart_${policy.id}`, policy.code, policy.actions.map((a, i) => ({ name: a.code, value: res.scores[i] })));
+    });
+  }, 0);
 }
 
 function wireNavButtons(st){
