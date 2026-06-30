@@ -279,7 +279,7 @@ function mixColor(c1, c2, t){
 }
 function rgb(arr){ return `rgb(${arr[0]},${arr[1]},${arr[2]})`; }
 
-function matrixHeatmap(canvasId, title){
+function matrixHeatmap(containerId, title){
   return `
     <div class="heatWrap">
       <div class="heatTitle">
@@ -290,24 +290,53 @@ function matrixHeatmap(canvasId, title){
           <span>alto</span>
         </div>
       </div>
-      <canvas class="heatCanvas" id="${canvasId}" width="900" height="560"></canvas>
+      <div class="heatSvgBox" id="${containerId}"></div>
     </div>
   `;
 }
 
-function drawMatrixHeatmap(canvasId, labels, A){
-  const c = document.getElementById(canvasId);
-  if(!c) return;
-  const ctx = c.getContext("2d");
-  const n = labels.length;
-  const W = c.width;
-  const H = c.height;
-  ctx.clearRect(0,0,W,H);
+function svgTextLines(label, maxChars=24){
+  const words = String(label).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = "";
+  words.forEach(word=>{
+    const test = current ? `${current} ${word}` : word;
+    if(test.length > maxChars && current){
+      lines.push(current);
+      current = word;
+    }else{
+      current = test;
+    }
+  });
+  if(current) lines.push(current);
+  return lines.slice(0, 3);
+}
 
-  const pad = 16;
-  const top = 62;
-  const left = 210;
-  const cell = Math.floor(Math.min(W - left - pad, H - top - pad) / n);
+function heatCellColor(value, maxAbs){
+  const blue = [42, 85, 205];
+  const white = [255, 255, 255];
+  const red = [226, 38, 46];
+  let col = white;
+  if(Number.isFinite(value) && value > 0){
+    const t = clamp(Math.log(value) / maxAbs, -1, 1);
+    if(t < 0) col = mixColor(white, blue, Math.abs(t));
+    if(t > 0) col = mixColor(white, red, Math.abs(t));
+  }
+  return rgb(col);
+}
+
+function drawMatrixHeatmap(containerId, labels, A){
+  const root = document.getElementById(containerId);
+  if(!root) return;
+
+  const n = labels.length;
+  const cell = n <= 3 ? 170 : 132;
+  const left = n <= 3 ? 230 : 260;
+  const top = 116;
+  const right = 24;
+  const bottom = 28;
+  const W = left + n * cell + right;
+  const H = top + n * cell + bottom;
 
   let maxAbs = 0.0;
   for(let i=0;i<n;i++){
@@ -318,51 +347,56 @@ function drawMatrixHeatmap(canvasId, labels, A){
   }
   if(maxAbs === 0) maxAbs = 1;
 
-  const blue = [29, 78, 216];
-  const white = [255, 255, 255];
-  const red = [220, 38, 38];
+  const colLabels = labels.map(x => svgTextLines(x, n <= 3 ? 22 : 18));
+  const rowLabels = labels.map(x => svgTextLines(x, n <= 3 ? 26 : 22));
 
-  ctx.fillStyle = "rgba(15,23,42,0.88)";
-  ctx.font = "12px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+  let svg = `
+    <svg class="heatSvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(String(labels.length))} by ${escapeHtml(String(labels.length))} comparison matrix">
+      <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="#ffffff"/>
+      <g class="heatGrid">
+  `;
 
   for(let j=0;j<n;j++){
-    const x = left + j*cell + cell/2;
-    ctx.save();
-    ctx.translate(x, top - 18);
-    ctx.rotate(-0.35);
-    ctx.fillText(labels[j], 0, 0);
-    ctx.restore();
+    const cx = left + j*cell + cell/2;
+    const cy = top - 42;
+    svg += `<g transform="translate(${cx},${cy}) rotate(-28)">`;
+    colLabels[j].forEach((line,k)=>{
+      svg += `<text class="heatLabel heatColLabel" x="0" y="${k*15}" text-anchor="middle">${escapeHtml(line)}</text>`;
+    });
+    svg += `</g>`;
   }
 
-  ctx.textAlign = "right";
   for(let i=0;i<n;i++){
     const y = top + i*cell + cell/2;
-    ctx.fillText(labels[i], left - 10, y);
+    rowLabels[i].forEach((line,k)=>{
+      const offset = (k - (rowLabels[i].length - 1) / 2) * 15;
+      svg += `<text class="heatLabel heatRowLabel" x="${left - 16}" y="${y + offset}" text-anchor="end">${escapeHtml(line)}</text>`;
+    });
   }
 
-  ctx.textAlign = "center";
   for(let i=0;i<n;i++){
     for(let j=0;j<n;j++){
-      const v = Number(A[i][j]);
+      const value = Number(A[i][j]);
       const x = left + j*cell;
       const y = top + i*cell;
-      let col = white;
-      if(Number.isFinite(v) && v > 0){
-        const t = clamp(Math.log(v) / maxAbs, -1, 1);
-        if(t < 0) col = mixColor(white, blue, Math.abs(t));
-        if(t > 0) col = mixColor(white, red, Math.abs(t));
-      }
-      ctx.fillStyle = rgb(col);
-      ctx.fillRect(x, y, cell, cell);
-      ctx.strokeStyle = "rgba(15,23,42,0.10)";
-      ctx.strokeRect(x, y, cell, cell);
-      ctx.fillStyle = "rgba(15,23,42,0.86)";
-      ctx.font = "11px system-ui";
-      ctx.fillText(Number.isFinite(v) ? v.toFixed(2) : "", x + cell/2, y + cell/2);
+      const fill = heatCellColor(value, maxAbs);
+      const text = Number.isFinite(value) ? value.toFixed(2) : "";
+      svg += `
+        <g class="heatCellGroup">
+          <rect class="heatCell" x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${fill}">
+            <title>${escapeHtml(labels[i])} / ${escapeHtml(labels[j])}: ${escapeHtml(text)}</title>
+          </rect>
+          <text class="heatValue" x="${x + cell/2}" y="${y + cell/2}" text-anchor="middle" dominant-baseline="middle">${escapeHtml(text)}</text>
+        </g>
+      `;
     }
   }
+
+  svg += `
+      </g>
+    </svg>
+  `;
+  root.innerHTML = svg;
 }
 
 function drawBarChart(canvasId, title, items){
