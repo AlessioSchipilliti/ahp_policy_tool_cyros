@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AHP Policy Tool</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="intro">
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <h1 class="h1">AHP Policy Tool</h1>
+        <div class="muted">Modello impostato</div>
+      </div>
+      <div class="topActions">
+        <button class="btn" id="nextBtn">Vai ai criteri</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <aside class="panel">
+        <div class="panelTitle">Pagine</div>
+        <a class="navLink active" href="index.html">1. Overview</a>
+        <a class="navLink" href="criteria.html">2. Criteri</a>
+        <a class="navLink" href="policies.html">3. Policy</a>
+        <a class="navLink" href="results.html">4. Risultati</a>
+        <div class="divider"></div>
+        <div class="panelTitle">Azioni</div>
+        <button class="btn" id="btnReset">Reset</button>
+        <div class="divider"></div>
+        <div class="small muted" id="status"></div>
+      </aside>
+      <section class="content">
+        <div class="card" id="view"></div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
