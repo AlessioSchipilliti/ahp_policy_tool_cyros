@@ -431,3 +431,394 @@ p{
 .resultRow{
   margin-top: 10px;
 }
+
+/* ---- Academic policy visuals ---- */
+.policyMiniCard{
+  display:grid;
+  grid-template-columns: 70px 1fr;
+  gap: 14px;
+  align-items:center;
+  border:1px solid rgba(15,23,42,0.10);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  padding: 14px;
+}
+
+.policyMiniCard h3{
+  margin: 2px 0 4px;
+  line-height: 1.15;
+}
+
+.policyMiniCard p{
+  margin: 0;
+  color: var(--muted);
+}
+
+.policyCode{
+  display:inline-block;
+  font-size: 11px;
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  color: var(--blue2);
+  font-weight: 750;
+}
+
+.policyIcon,
+.priorityIcon{
+  display:grid;
+  place-items:center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #06224a, #0f3a6d);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 22px rgba(15,23,42,0.16);
+}
+
+.policyIcon{
+  width: 64px;
+  height: 64px;
+}
+
+.policyIcon svg,
+.priorityIcon svg{
+  width: 42px;
+  height: 42px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.priorityMatrixWrap{
+  border:1px solid var(--border);
+  border-radius: 18px;
+  background:#ffffff;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.priorityMatrixTitle{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.priorityMatrixTitle h2{
+  margin: 0 0 4px;
+  letter-spacing: -.2px;
+}
+
+.priorityLegend{
+  display:flex;
+  align-items:center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.priorityLegend i{
+  width: 148px;
+  height: 12px;
+  border-radius: 999px;
+  border:1px solid rgba(15,23,42,0.10);
+  background: linear-gradient(90deg, #edf7e8, #b9e4a1, #44a852, #006b3d);
+}
+
+.priorityScroll{
+  overflow-x:auto;
+  border:1px solid rgba(15,23,42,0.10);
+  border-radius: 14px;
+}
+
+.priorityMatrix{
+  min-width: 1120px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.priorityMatrix th,
+.priorityMatrix td{
+  border-bottom:1px solid rgba(15,23,42,0.10);
+  border-right:1px solid rgba(15,23,42,0.08);
+  padding: 10px 12px;
+  text-align:center;
+  vertical-align:middle;
+}
+
+.priorityMatrix thead th{
+  background:#1f2937;
+  color:#ffffff;
+  font-weight: 750;
+}
+
+.priorityMatrix thead tr:first-child th{
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.priorityMatrix .actionsCorner{
+  text-align:left;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  min-width: 250px;
+}
+
+.priorityPolicyHead{
+  min-width: 220px;
+}
+
+.priorityHeadContent{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 12px;
+  text-align:left;
+}
+
+.priorityHeadContent span{
+  display:block;
+  max-width: 150px;
+  color: rgba(255,255,255,0.86);
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.priorityIcon{
+  width: 48px;
+  height: 48px;
+  box-shadow: none;
+}
+
+.priorityIcon svg{
+  width: 31px;
+  height: 31px;
+  stroke-width: 3.6;
+}
+
+.priorityMatrix tbody th.actionHead{
+  width: 250px;
+  text-align:left;
+  background:#fbfdff;
+  color: var(--text);
+}
+
+.actionHead span{
+  display:inline-block;
+  min-width: 42px;
+  color:#0f3a6d;
+  font-weight: 800;
+}
+
+.actionHead strong{
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.scoreCell,
+.scorePct{
+  background: color-mix(in srgb, #2f9e44 calc(var(--score) * 72%), #f7fbf5);
+  color:#071a0c;
+  font-weight: 750;
+}
+
+.scoreCell{
+  position:relative;
+  min-width: 120px;
+}
+
+.scoreCell span{
+  position:relative;
+  z-index:1;
+}
+
+.scoreCell i{
+  display:block;
+  height: 18px;
+  max-width: 92%;
+  min-width: 8px;
+  margin: 4px auto 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #0a6f3d, #006b3d);
+}
+
+.emptyScore{
+  color: rgba(15,23,42,0.42);
+  background:#ffffff;
+  font-weight: 600;
+}
+
+.priorityMatrix tfoot th,
+.priorityMatrix tfoot td{
+  background:#064e3b;
+  color:#ffffff;
+  font-weight: 800;
+  border-bottom:0;
+}
+
+@media (max-width: 760px){
+  .policyMiniCard{
+    grid-template-columns: 1fr;
+  }
+  .priorityMatrixTitle{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
+
+/* ---- CYROS visual identity ---- */
+:root{
+  --brand:#b25948;
+  --brandDark:#843d33;
+  --brandSoft:#f7ebe8;
+  --euBlue:#253b84;
+  --itlBlue:#00558f;
+  --green:#006b3d;
+  --blue:#253b84;
+  --blue2:#253b84;
+  --text:#1d2f61;
+}
+
+body{
+  background: linear-gradient(180deg, #f8fafc 0%, #f5f7fb 42%, #ffffff 100%);
+}
+
+.brandTop{
+  align-items:center;
+  border-top: 6px solid var(--brand);
+  padding: 18px 20px;
+}
+
+.brandHeader{
+  display:grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.brandLogos{
+  display:flex;
+  align-items:center;
+  gap: 24px;
+  flex-wrap:wrap;
+}
+
+.brandLogo{
+  display:block;
+  object-fit:contain;
+  max-width:100%;
+}
+
+.interregLogo{
+  width: 330px;
+  height:auto;
+}
+
+.itlLogo{
+  width: 310px;
+  height:auto;
+}
+
+.brandTitleBlock{
+  padding-top: 10px;
+  border-top: 1px solid rgba(37,59,132,0.22);
+}
+
+.h1,
+h2,
+h3,
+.panelTitle,
+.policyCode,
+.navLink.active,
+.actionHead span{
+  color: var(--brandDark);
+}
+
+.h1{
+  font-size: 30px;
+  color: var(--euBlue);
+}
+
+.panelTitle{
+  letter-spacing: 1px;
+}
+
+.navLink.active{
+  border-color: rgba(178,89,72,0.35);
+  background: var(--brandSoft);
+}
+
+.navLink:hover,
+.btn:hover,
+.tabBtn:hover{
+  background: var(--brandSoft);
+  border-color: rgba(178,89,72,0.26);
+}
+
+.btn.inline,
+.topActions .btn{
+  border-color: rgba(178,89,72,0.35);
+  background: #fffaf9;
+  color: var(--brandDark);
+  font-weight: 700;
+}
+
+.policyMiniCard{
+  border-left: 5px solid var(--brand);
+}
+
+.policyIcon,
+.priorityIcon{
+  background: linear-gradient(135deg, var(--euBlue), var(--itlBlue));
+}
+
+.priorityMatrixTitle h2{
+  color: var(--euBlue);
+}
+
+.priorityMatrix thead th{
+  background: linear-gradient(180deg, var(--euBlue), #17295f);
+}
+
+.priorityMatrix .actionsCorner{
+  background: linear-gradient(180deg, var(--brandDark), #693129);
+}
+
+.priorityLegend i{
+  background: linear-gradient(90deg, #f7ebe8, #d8b6ad, #b25948, #843d33);
+}
+
+.scoreCell,
+.scorePct{
+  background: color-mix(in srgb, var(--brand) calc(var(--score) * 66%), #fffaf9);
+}
+
+.scoreCell i{
+  background: linear-gradient(90deg, var(--brand), var(--brandDark));
+}
+
+.priorityMatrix tfoot th,
+.priorityMatrix tfoot td{
+  background: var(--brandDark);
+}
+
+.badge.good{ color:#006b3d; }
+.badge.mid{ color:#9a5a00; }
+.badge.warn{ color:#b42318; }
+
+@media (max-width: 760px){
+  .brandTop{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .brandLogos{
+    gap: 14px;
+  }
+  .interregLogo,
+  .itlLogo{
+    width: 100%;
+    max-width: 330px;
+  }
+}
