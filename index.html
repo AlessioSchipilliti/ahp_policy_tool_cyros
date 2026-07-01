@@ -1,40 +1,55 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CYROS AHP Decision Support Tool</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="overview">
   <div class="wrap">
     <header class="brandTop">
       <div class="logoRow">
-        <img class="brandLogo" src="assets/interreg-cyros.png" alt="Interreg Italy-Croatia CYROS">
-        <img class="brandLogo itl" src="assets/itl-logo.png" alt="Fondazione ITL">
+        <img class="brandLogo interreg" src="assets/interreg-cyros.png" alt="Interreg Italy-Croatia CYROS" />
+        <img class="brandLogo itl" src="assets/itl-logo.png" alt="Fondazione ITL" />
       </div>
       <div class="titleBand">
+        <div class="versionBadge">Version 1.0</div>
         <h1 class="h1">CYROS AHP Decision Support Tool</h1>
-        <p class="subtitle">Decision Support System for Prioritising Cross-border Cycling Policies</p>
+        <p class="subtitle">Decision support system for prioritising cross-border cycling policies</p>
+        <p class="subtitle minor">Italy-Croatia Adriatic-Ionian Cycling Corridor</p>
+        <div class="topActions">
+          <a class="btn primary" href="methodology.html">Start Assessment</a>
+          <a class="btn light" href="methodology.html">Methodology</a>
+        </div>
       </div>
     </header>
+
     <main class="grid">
       <aside class="panel">
-        <div class="panelTitle">Pages</div>
+        <div class="panelTitle">Workflow</div>
         <a class="navLink active" href="index.html">Overview</a>
+        <a class="navLink" href="methodology.html">Methodology</a>
         <a class="navLink" href="criteria.html">Criteria</a>
         <a class="navLink" href="policies.html">Policies</a>
         <a class="navLink" href="results.html">Results</a>
         <div class="divider"></div>
         <div class="panelTitle">Actions</div>
-        <button class="btn" id="btnReset">Reset assessment</button>
+        <button class="btn" id="btnReset">Reset evaluation</button>
+        <button class="btn" id="btnExport">Export JSON</button>
         <div class="divider"></div>
         <div class="small muted" id="status"></div>
-        <div class="small muted" id="lastSaved"></div>
       </aside>
-      <section class="content"><div class="card" id="view"></div></section>
+
+      <section class="content">
+        <div class="card heroCard" id="view"></div>
+      </section>
     </main>
-    <footer class="siteFooter"><div><a href="https://www.italy-croatia.eu/web/cyros" target="_blank" rel="noopener">www.italy-croatia.eu/web/cyros</a></div><div>Copyright © Fondazione ITL</div></footer>
+
+    <footer class="siteFooter">
+      <div><a href="https://www.italy-croatia.eu/web/cyros" target="_blank" rel="noopener">https://www.italy-croatia.eu/web/cyros</a></div>
+      <div>Copyright © Fondazione ITL</div>
+    </footer>
   </div>
   <script src="app.js"></script>
 </body>
