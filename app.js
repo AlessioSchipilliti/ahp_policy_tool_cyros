@@ -146,14 +146,8 @@ function progressBlock(st, activeKey){
   const items = completionItems(st);
   const doneCount = items.filter(x=>x.done).length;
   const pct = Math.round((doneCount / items.length) * 100);
-  return `<section class="assessmentProgress" aria-label="Assessment progress">
-    <div class="progressTop"><div><strong>Assessment progress</strong><span>${doneCount} of ${items.length} sections completed</span></div><strong>${pct}%</strong></div>
-    <div class="progressTrack"><div style="width:${pct}%"></div></div>
-    <div class="progressMap">${items.map((item, i)=>{
-      const cls = item.key === activeKey ? "active" : (item.done ? "done" : "todo");
-      const symbol = item.done ? "✓" : (i + 1);
-      return `<div class="progressItem ${cls}" title="${escapeHtml(item.detail)}"><span>${symbol}</span>${escapeHtml(item.label)}</div>`;
-    }).join("")}</div>
+  return `<section class="assessmentProgress minimal" aria-label="Assessment progress" title="${pct}% completed">
+    <div class="progressTrack" aria-hidden="true"><div style="width:${pct}%"></div></div>
   </section>`;
 }
 
@@ -173,7 +167,7 @@ function showPoliciesTutorialOnce(){
       <div><strong>Centre</strong><span>Use the centre for equal importance.</span></div>
       <div><strong>Right</strong><span>Choose this side if the right action is preferred.</span></div>
     </div>
-    <p>Complete all pairwise comparisons for the current criterion. Then continue with the next criterion. After completing all three criteria, proceed to the next policy.</p>
+    <p>Complete all pairwise comparisons for the current <strong>criterion</strong>. Then continue with the next <strong>criterion</strong>. After completing all three <strong>criteria</strong>, proceed to the next <strong>policy</strong>.</p>
     <button type="button" class="btn primary" id="tutorialStartBtn">Start assessment</button>
   </div>`;
   document.body.appendChild(modal);
