@@ -145,17 +145,7 @@ function bindPairwise(rootEl, A, onUpdate){
   rootEl.querySelectorAll(".pairRow").forEach(row=>{
     const i=Number(row.dataset.i), j=Number(row.dataset.j), rng=row.querySelector(".rng"), valBox=row.querySelector(".valBox"), dirBox=row.querySelector(".dirBox");
     const normalize=raw=>{ let v=Number(raw); if(v===0) v=1; if(v===-1) v=-2; return v<0?Math.max(-9,Math.min(-2,v)):Math.max(1,Math.min(9,v)); };
-    const setDirection = v => {
-    if (v === 1) {
-        dirBox.textContent = "Equal importance";
-    } else if (v > 1) {
-        dirBox.textContent = "Right item preferred";
-    } else {
-        dirBox.textContent = "Left item preferred";
-    }
-
-    valBox.textContent = v === 1 ? "1" : String(Math.abs(v));
-};
+    const setDirection=v=>{ dirBox.textContent = v===1 ? "Equal importance" : (v>1 ? "Left item preferred" : "Right item preferred"); valBox.textContent = v===1 ? "1" : String(Math.abs(v)); };
     const apply=()=>{ const v=normalize(rng.value); rng.value=String(v); setDirection(v); const B=cloneMatrix(A); if(v>1){B[i][j]=v; B[j][i]=1/v;} else if(v===1){B[i][j]=1; B[j][i]=1;} else {const s=Math.abs(v); B[i][j]=1/s; B[j][i]=s;} for(let k=0;k<B.length;k++) B[k][k]=1; onUpdate(B); };
     rng.addEventListener("input",()=>{ const v=normalize(rng.value); rng.value=String(v); setDirection(v); });
     rng.addEventListener("change",apply); setDirection(normalize(rng.value));
