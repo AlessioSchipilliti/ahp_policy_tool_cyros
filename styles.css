@@ -18,14 +18,18 @@ body{
   margin:0;
   font-family:Inter,Source Sans 3,Segoe UI,Roboto,Arial,sans-serif;
   color:var(--text);
-  background:radial-gradient(circle at 15% 0%, #F1D8D2 0, #D7A79D 38%, #C4877B 100%);
+  background-color:#D7A79D;
+  background-image:linear-gradient(rgba(215,167,157,.78), rgba(196,135,123,.88)), url("assets/color-swatch.png");
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
 }
 .wrap{max-width:1240px;margin:0 auto;padding:22px 18px 46px}
 .brandTop{background:#fff;border-radius:26px;box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(255,255,255,.7)}
 .brandTop.compact .logoRow{min-height:92px}.brandTop.compact .titleBand{padding:18px 18px 20px}.brandTop.compact .h1{font-size:28px}
 .logoRow{min-height:118px;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:18px 28px;background:#fff}
 .brandLogo{height:78px;width:auto;max-width:43%;object-fit:contain}.brandLogo.itl{height:68px}
-.titleBand{background:linear-gradient(135deg,#E4BDB6,#D7A79D 55%,#C98D82);text-align:center;padding:28px 20px 32px;color:var(--blue)}
+.titleBand{background-color:#D7A79D;background-image:linear-gradient(rgba(228,189,182,.78), rgba(201,141,130,.88)), url("assets/color-swatch.png");background-size:cover;background-position:center;text-align:center;padding:28px 20px 32px;color:var(--blue)}
 .versionBadge{display:inline-flex;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.46);border:1px solid rgba(255,255,255,.6);font-weight:800;font-size:12px;margin-bottom:10px}
 .h1{margin:0;font-size:36px;letter-spacing:-.45px;color:var(--blue)}
 .subtitle{margin:8px 0 0;color:rgba(22,56,95,.84);font-size:16px}.subtitle.minor{font-size:14px}
