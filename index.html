@@ -1,45 +1,40 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>CYROS AHP Decision Support Tool</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div class="shell">
-    <header class="brandHeader">
-      <div class="logoBar">
-        <img src="assets/interreg-cyros.png" class="logo interreg" alt="Interreg Italy-Croatia CYROS" />
-        <img src="assets/itl-logo.png" class="logo itl" alt="Fondazione ITL" />
+<body data-page="overview">
+  <div class="wrap">
+    <header class="brandTop">
+      <div class="logoRow">
+        <img class="brandLogo" src="assets/interreg-cyros.png" alt="Interreg Italy-Croatia CYROS">
+        <img class="brandLogo itl" src="assets/itl-logo.png" alt="Fondazione ITL">
       </div>
-      <section class="hero">
-        <span class="version">Version 1.0</span>
-        <h1>CYROS AHP Decision Support Tool</h1>
-        <p class="lead">Decision support system for prioritising cross-border cycling policies</p>
-        <p class="minor">Italy-Croatia Adriatic-Ionian Cycling Corridor</p>
-        <div class="heroActions">
-          <button class="btn primary" data-route="criteria">Start Assessment</button>
-          <button class="btn ghost" data-route="results">View Results</button>
-        </div>
-      </section>
+      <div class="titleBand">
+        <h1 class="h1">CYROS AHP Decision Support Tool</h1>
+        <p class="subtitle">Decision Support System for Prioritising Cross-border Cycling Policies</p>
+      </div>
     </header>
-
-    <nav class="topNav" aria-label="Workflow navigation">
-      <button class="navItem active" data-route="overview">Overview</button>
-      <button class="navItem" data-route="criteria">Criteria</button>
-      <button class="navItem" data-route="policies">Policies</button>
-      <button class="navItem" data-route="results">Results</button>
-      <button class="navItem subtle" id="btnReset" type="button">Reset</button>
-      <button class="navItem subtle" id="btnExport" type="button">Export JSON</button>
-    </nav>
-
-    <main id="app" class="app"></main>
-
-    <footer class="footer">
-      <a href="https://www.italy-croatia.eu/web/cyros" target="_blank" rel="noopener">https://www.italy-croatia.eu/web/cyros</a>
-      <span>Copyright © Fondazione ITL</span>
-    </footer>
+    <main class="grid">
+      <aside class="panel">
+        <div class="panelTitle">Pages</div>
+        <a class="navLink active" href="index.html">Overview</a>
+        <a class="navLink" href="criteria.html">Criteria</a>
+        <a class="navLink" href="policies.html">Policies</a>
+        <a class="navLink" href="results.html">Results</a>
+        <div class="divider"></div>
+        <div class="panelTitle">Actions</div>
+        <button class="btn" id="btnReset">Reset assessment</button>
+        <div class="divider"></div>
+        <div class="small muted" id="status"></div>
+        <div class="small muted" id="lastSaved"></div>
+      </aside>
+      <section class="content"><div class="card" id="view"></div></section>
+    </main>
+    <footer class="siteFooter"><div><a href="https://www.italy-croatia.eu/web/cyros" target="_blank" rel="noopener">www.italy-croatia.eu/web/cyros</a></div><div>Copyright © Fondazione ITL</div></footer>
   </div>
   <script src="app.js"></script>
 </body>
