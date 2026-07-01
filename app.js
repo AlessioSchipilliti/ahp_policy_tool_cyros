@@ -159,7 +159,8 @@ function progressBlock(st, activeKey){
 
 function showPoliciesTutorialOnce(){
   if(document.body.dataset.page !== "policies") return;
-  if(sessionStorage.getItem("cyrosPoliciesTutorialSeen") === "true") return;
+  if(document.querySelector(".tutorialOverlay")) return;
+  if(sessionStorage.getItem("cyrosPoliciesTutorialSeen_v2") === "true") return;
   const modal = document.createElement("div");
   modal.className = "tutorialOverlay";
   modal.innerHTML = `<div class="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
@@ -176,7 +177,7 @@ function showPoliciesTutorialOnce(){
     <button type="button" class="btn primary" id="tutorialStartBtn">Start assessment</button>
   </div>`;
   document.body.appendChild(modal);
-  const close = ()=>{ sessionStorage.setItem("cyrosPoliciesTutorialSeen", "true"); modal.remove(); };
+  const close = ()=>{ sessionStorage.setItem("cyrosPoliciesTutorialSeen_v2", "true"); modal.remove(); };
   modal.querySelector("#tutorialStartBtn").addEventListener("click", close);
   modal.addEventListener("click", e=>{ if(e.target === modal) close(); });
   document.addEventListener("keydown", function escHandler(e){ if(e.key === "Escape"){ close(); document.removeEventListener("keydown", escHandler); } });
@@ -330,6 +331,6 @@ function wireCommon(st){
   const reset=document.getElementById("btnReset"); if(reset) reset.addEventListener("click",()=>{ localStorage.removeItem(STORAGE_KEY); location.href="index.html"; });
   const exp=document.getElementById("btnExport"); if(exp) exp.addEventListener("click",()=>{ const out={problem:st.problem, criteria:CRITERIA, policies:POLICIES, criteriaMatrix:st.criteriaMatrix, policyMatrices:st.policies}; const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="cyros_ahp_state.json"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
 }
-function main(){ const st=loadState(); wireCommon(st); setStatus(st); const page=document.body.dataset.page; if(page==="overview") renderOverviewPage(st); if(page==="criteria") renderCriteriaPage(st); if(page==="policies") renderPoliciesPage(st); if(page==="results") renderResultsPage(st); saveState(st); }
+function main(){ const st=loadState(); wireCommon(st); setStatus(st); const page=document.body.dataset.page; if(page==="overview") renderOverviewPage(st); if(page==="criteria") renderCriteriaPage(st); if(page==="policies") renderPoliciesPage(st); if(page==="results") renderResultsPage(st); if(page==="policies") setTimeout(showPoliciesTutorialOnce, 350); saveState(st); }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", main); else main();
 window.addEventListener("pageshow", main);
