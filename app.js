@@ -1,5 +1,5 @@
 // app.js
-const STORAGE_KEY = "ahp_policy_state_v1";
+const STORAGE_KEY = "ahp_policy_state_v2";
 
 const RI = { 1:0, 2:0, 3:0.58, 4:0.90, 5:1.12, 6:1.24, 7:1.32, 8:1.41, 9:1.45, 10:1.49 };
 
@@ -45,13 +45,13 @@ const POLICIES = [
       },
       {
         code: "A1.4",
-        name: "Rest Areas and Micro-Infrastructure",
-        bullets: ["aree di sosta, fontanelle", "punti di manutenzione", "ricarica e-bike"]
-      },
-      {
-        code: "A1.5",
-        name: "Bike-Friendly Stations and Ports",
-        bullets: ["parcheggi protetti", "deposito bagagli", "punti informativi"]
+        name: "Bike Support Facilities",
+        bullets: [
+          "aree di sosta, fontanelle",
+          "punti di manutenzione, informativi",
+          "ricarica e-bike",
+          "parcheggi protetti, deposito bagagli"
+        ]
       }
     ]
   },
@@ -284,82 +284,67 @@ function matrixHeatmap(containerId, title){
     <div class="heatWrap">
       <div class="heatTitle">
         <div class="panelTitle" style="margin:0;">${escapeHtml(title)}</div>
-        <div class="heatLegend">
-          <span>basso</span>
-          <span class="heatLegendBar"></span>
-          <span>alto</span>
-        </div>
       </div>
-      <div class="heatSvgBox" id="${containerId}"></div>
+      <div class="heatLegendSingle" aria-label="Legenda della matrice AHP">
+        <span class="legendItem"><span class="legendDot legendRow"></span>Preferenza per l'elemento di riga</span>
+        <span class="legendItem"><span class="legendDot legendEqual"></span>Pari importanza</span>
+        <span class="legendItem"><span class="legendDot legendColumn"></span>Preferenza per l'elemento di colonna</span>
+      </div>
+      <div class="heatSvgHost" id="${containerId}"></div>
+      <p class="heatNote">La cella confronta l'elemento di riga con quello di colonna. Valori maggiori di 1 indicano preferenza per la riga; valori minori di 1 indicano preferenza per la colonna.</p>
     </div>
   `;
 }
 
-function svgTextLines(label, maxChars=24){
-  const words = String(label).split(/\s+/).filter(Boolean);
+function wrapSvgText(text, maxChars){
+  const words = String(text).split(/\s+/).filter(Boolean);
   const lines = [];
-  let current = "";
-  words.forEach(word=>{
-    const test = current ? `${current} ${word}` : word;
-    if(test.length > maxChars && current){
-      lines.push(current);
-      current = word;
+  let line = "";
+  words.forEach(word => {
+    const test = line ? `${line} ${word}` : word;
+    if(test.length > maxChars && line){
+      lines.push(line);
+      line = word;
     }else{
-      current = test;
+      line = test;
     }
   });
-  if(current) lines.push(current);
+  if(line) lines.push(line);
   return lines.slice(0, 3);
 }
 
-function heatCellColor(value, maxAbs){
-  const cool = [224, 232, 246];
-  const coolStrong = [49, 84, 171];
+function heatColor(value, maxAbs){
+  const blue = [17, 45, 91];
   const neutral = [255, 255, 255];
-  const warm = [249, 229, 222];
-  const warmStrong = [175, 87, 70];
-
-  if(!Number.isFinite(value) || value <= 0) return rgb(neutral);
-  const t = clamp(Math.log(value) / maxAbs, -1, 1);
-  if(t < 0) return rgb(mixColor(cool, coolStrong, Math.abs(t)));
-  if(t > 0) return rgb(mixColor(warm, warmStrong, Math.abs(t)));
-  return rgb(neutral);
+  const orange = [175, 88, 67];
+  if(!Number.isFinite(value) || value <= 0 || value === 1) return rgb(neutral);
+  const t = clamp(Math.abs(Math.log(value)) / maxAbs, 0, 1);
+  const strength = 0.18 + t * 0.76;
+  if(value > 1) return rgb(mixColor(neutral, blue, strength));
+  return rgb(mixColor(neutral, orange, strength));
 }
 
-function heatTextColor(value){
-  if(!Number.isFinite(value) || value <= 0) return "#0d244f";
-  const a = Math.abs(Math.log(value));
-  return a > 1.35 ? "#ffffff" : "#0d244f";
-}
-
-function svgWrappedText(lines, x, y, opts={}){
+function svgTextLines(lines, x, y, opts={}){
   const anchor = opts.anchor || "middle";
-  const cls = opts.cls || "heatLabel";
-  const lineH = opts.lineH || 15;
-  const extra = opts.extra || "";
-  const startY = y - ((lines.length - 1) * lineH) / 2;
-  return lines.map((line, k)=>
-    `<text class="${cls}" x="${x}" y="${startY + k*lineH}" text-anchor="${anchor}" ${extra}>${escapeHtml(line)}</text>`
-  ).join("");
+  const size = opts.size || 13;
+  const weight = opts.weight || 600;
+  const fill = opts.fill || "#0b1f45";
+  const dy = opts.dy || 16;
+  const startY = y - ((lines.length - 1) * dy) / 2;
+  return `
+    <text x="${x}" y="${startY}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${size}" font-weight="${weight}" fill="${fill}">
+      ${lines.map((line, idx)=>`<tspan x="${x}" dy="${idx === 0 ? 0 : dy}">${escapeHtml(line)}</tspan>`).join("")}
+    </text>
+  `;
 }
 
 function drawMatrixHeatmap(containerId, labels, A){
-  const root = document.getElementById(containerId);
-  if(!root) return;
-
+  const host = document.getElementById(containerId);
+  if(!host) return;
   const n = labels.length;
-  const compact = n > 3;
-  const cell = compact ? 118 : 148;
-  const rowHeaderW = compact ? 250 : 240;
-  const topHeaderH = compact ? 86 : 78;
-  const pad = 28;
-  const legendH = 48;
-  const gridX = pad + rowHeaderW;
-  const gridY = pad + topHeaderH;
-  const W = gridX + n * cell + pad;
-  const H = gridY + n * cell + pad + legendH;
+  if(!n) return;
 
-  let maxAbs = 0.0;
+  let maxAbs = 0;
   for(let i=0;i<n;i++){
     for(let j=0;j<n;j++){
       const v = Number(A[i][j]);
@@ -368,125 +353,127 @@ function drawMatrixHeatmap(containerId, labels, A){
   }
   if(maxAbs === 0) maxAbs = 1;
 
-  const colLabels = labels.map(x => svgTextLines(x, compact ? 16 : 20));
-  const rowLabels = labels.map(x => svgTextLines(x, compact ? 24 : 26));
-  const matrixWidth = n * cell;
-  const matrixHeight = n * cell;
-  const legendX = gridX;
-  const legendY = gridY + matrixHeight + 24;
-  const legendW = Math.min(360, matrixWidth);
-  const legendStops = [
-    { x:0, c:"#3154ab" },
-    { x:0.5, c:"#ffffff" },
-    { x:1, c:"#af5746" }
-  ];
+  const labelW = 280;
+  const headH = 96;
+  const cell = n <= 3 ? 178 : 132;
+  const pad = 18;
+  const W = labelW + n * cell + pad * 2;
+  const H = headH + n * cell + pad * 2;
+  const x0 = pad;
+  const y0 = pad;
+  const gridX = x0 + labelW;
+  const gridY = y0 + headH;
 
-  let svg = `
-    <svg class="heatSvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Matrice di confronto AHP ${escapeHtml(String(n))} per ${escapeHtml(String(n))}">
-      <defs>
-        <filter id="heatShadow" x="-8%" y="-8%" width="116%" height="116%">
-          <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0d244f" flood-opacity="0.10"/>
-        </filter>
-        <linearGradient id="heatLegendGradient" x1="0" x2="1" y1="0" y2="0">
-          ${legendStops.map(s => `<stop offset="${s.x*100}%" stop-color="${s.c}"/>`).join("")}
-        </linearGradient>
-      </defs>
-
-      <rect class="heatCanvasBg" x="1" y="1" width="${W-2}" height="${H-2}" rx="22"/>
-      <g filter="url(#heatShadow)">
-        <rect class="heatGridBg" x="${pad}" y="${pad}" width="${rowHeaderW + matrixWidth}" height="${topHeaderH + matrixHeight}" rx="16"/>
-      </g>
-
-      <rect class="heatCorner" x="${pad}" y="${pad}" width="${rowHeaderW}" height="${topHeaderH}" rx="16"/>
-      <rect class="heatCornerMask" x="${pad + rowHeaderW - 16}" y="${pad}" width="16" height="${topHeaderH}"/>
-      <rect class="heatCornerMask" x="${pad}" y="${pad + topHeaderH - 16}" width="${rowHeaderW}" height="16"/>
-      <text class="heatAxisTitle" x="${pad + 18}" y="${pad + 31}" text-anchor="start">Righe</text>
-      <text class="heatAxisSub" x="${pad + 18}" y="${pad + 54}" text-anchor="start">Elemento confrontato</text>
-      <text class="heatAxisTitle" x="${gridX + 14}" y="${pad + 31}" text-anchor="start">Colonne</text>
-      <text class="heatAxisSub" x="${gridX + 14}" y="${pad + 54}" text-anchor="start">Elemento di riferimento</text>
-  `;
-
-  for(let j=0;j<n;j++){
-    const x = gridX + j*cell;
-    const cx = x + cell/2;
-    const isLast = j === n-1;
-    svg += `<rect class="heatHeaderCell" x="${x}" y="${pad}" width="${cell}" height="${topHeaderH}" ${isLast ? `rx="16"` : ""}/>`;
-    svg += svgWrappedText(colLabels[j], cx, pad + topHeaderH/2 + 4, { cls:"heatColHeader", lineH:14 });
-  }
-
+  let cells = "";
   for(let i=0;i<n;i++){
-    const y = gridY + i*cell;
-    const cy = y + cell/2;
-    const isLast = i === n-1;
-    svg += `<rect class="heatRowHeaderCell" x="${pad}" y="${y}" width="${rowHeaderW}" height="${cell}" ${isLast ? `rx="16"` : ""}/>`;
-    svg += svgWrappedText(rowLabels[i], pad + rowHeaderW - 18, cy + 5, { cls:"heatRowHeader", anchor:"end", lineH:15 });
-  }
+    const y = gridY + i * cell;
+    cells += `<rect x="${x0}" y="${y}" width="${labelW}" height="${cell}" fill="#fbfaf8" stroke="#d7ddea" stroke-width="1"/>`;
+    cells += svgTextLines(wrapSvgText(labels[i], 23), x0 + labelW - 18, y + cell / 2, { anchor:"end", size:14, weight:700 });
 
-  for(let i=0;i<n;i++){
     for(let j=0;j<n;j++){
-      const value = Number(A[i][j]);
-      const x = gridX + j*cell;
-      const y = gridY + i*cell;
-      const fill = heatCellColor(value, maxAbs);
-      const color = heatTextColor(value);
-      const text = Number.isFinite(value) ? value.toFixed(2) : "";
-      const diag = i === j;
-      svg += `
-        <g class="heatCellGroup">
-          <rect class="heatCell ${diag ? "heatDiagonal" : ""}" x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${fill}">
-            <title>${escapeHtml(labels[i])} / ${escapeHtml(labels[j])}: ${escapeHtml(text)}</title>
-          </rect>
-          <text class="heatValue" x="${x + cell/2}" y="${y + cell/2 - 2}" text-anchor="middle" dominant-baseline="middle" fill="${color}">${escapeHtml(text)}</text>
-        </g>
-      `;
+      const x = gridX + j * cell;
+      const v = Number(A[i][j]);
+      const fill = heatColor(v, maxAbs);
+      cells += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${fill}" stroke="#d7ddea" stroke-width="1"/>`;
+      cells += `<text x="${x + cell / 2}" y="${y + cell / 2}" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#06183a">${Number.isFinite(v) ? v.toFixed(2) : ""}</text>`;
     }
   }
 
-  svg += `
-      <g class="heatLegendSvg" transform="translate(${legendX},${legendY})">
-        <text class="heatLegendTitle" x="0" y="0">Scala cromatica</text>
-        <rect x="0" y="12" width="${legendW}" height="12" rx="6" fill="url(#heatLegendGradient)"/>
-        <text class="heatLegendText" x="0" y="42" text-anchor="start">preferenza reciproca</text>
-        <text class="heatLegendText" x="${legendW/2}" y="42" text-anchor="middle">equivalenza</text>
-        <text class="heatLegendText" x="${legendW}" y="42" text-anchor="end">preferenza diretta</text>
-      </g>
+  let colHeads = "";
+  for(let j=0;j<n;j++){
+    const x = gridX + j * cell;
+    colHeads += `<rect x="${x}" y="${y0}" width="${cell}" height="${headH}" fill="#112d5b" stroke="#6f80a5" stroke-width="1"/>`;
+    colHeads += svgTextLines(wrapSvgText(labels[j], 18), x + cell / 2, y0 + headH / 2 + 3, { size:14, weight:800, fill:"#ffffff", dy:16 });
+  }
+
+  const svg = `
+    <svg class="heatSvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(containerId || 'Matrice AHP')}">
+      <rect x="1" y="1" width="${W-2}" height="${H-2}" rx="18" fill="#ffffff" stroke="#d7ddea" stroke-width="1"/>
+      <rect x="${x0}" y="${y0}" width="${labelW}" height="${headH}" rx="18" fill="#112d5b"/>
+      <rect x="${x0}" y="${y0 + headH - 18}" width="${labelW}" height="18" fill="#112d5b"/>
+      <rect x="${x0 + labelW - 18}" y="${y0}" width="18" height="${headH}" fill="#112d5b"/>
+      <text x="${x0 + 22}" y="${y0 + 36}" font-size="18" font-weight="800" fill="#ffffff">Elemento di riga</text>
+      <text x="${x0 + 22}" y="${y0 + 66}" font-size="14" font-weight="600" fill="#dce6ff">confrontato con la colonna</text>
+      ${colHeads}
+      ${cells}
     </svg>
   `;
-  root.innerHTML = svg;
+  host.innerHTML = svg;
 }
 
 function drawBarChart(canvasId, title, items){
   const c = document.getElementById(canvasId);
   if(!c) return;
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.clientWidth || 900;
+  const cssH = c.clientHeight || 300;
+  c.width = Math.round(cssW * dpr);
+  c.height = Math.round(cssH * dpr);
   const ctx = c.getContext("2d");
-  const W = c.width;
-  const H = c.height;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = "rgba(15,23,42,0.92)";
-  ctx.font = "18px system-ui";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const rows = items.slice().sort((a,b)=>b.value-a.value);
+  const maxV = Math.max(...rows.map(x => x.value), 0.00001);
+  const left = 210;
+  const right = 86;
+  const top = 66;
+  const rowH = 44;
+  const gap = 12;
+  const chartW = cssW - left - right;
+
+  ctx.fillStyle = "#0b1f45";
+  ctx.font = "700 17px system-ui, -apple-system, Segoe UI, Roboto, Arial";
   ctx.fillText(title, 18, 28);
+  ctx.fillStyle = "#5f6f8a";
+  ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  ctx.fillText("Action priority ranking", 18, 48);
 
-  const maxV = Math.max(...items.map(x => x.value), 0.00001);
-  const left = 18;
-  const top = 50;
-  const chartW = W - 36;
-  const chartH = H - 72;
-  const n = items.length;
-  const gap = 14;
-  const barW = (chartW - gap*(n-1)) / n;
+  rows.forEach((x, i)=>{
+    const y = top + i * (rowH + gap);
+    const barW = (x.value / maxV) * chartW;
+    const isBest = i === 0;
 
-  items.forEach((x, i)=>{
-    const h = (x.value / maxV) * (chartH * 0.90);
-    const bx = left + i*(barW+gap);
-    const by = top + chartH - h;
-    ctx.fillStyle = "rgba(37,99,235,0.18)";
-    ctx.fillRect(bx, by, barW, h);
-    ctx.fillStyle = "rgba(15,23,42,0.76)";
-    ctx.font = "12px system-ui";
-    ctx.fillText(x.name, bx, top + chartH + 15);
-    ctx.fillStyle = "rgba(15,23,42,0.90)";
-    ctx.fillText(x.value.toFixed(3), bx, by - 6);
+    ctx.fillStyle = "#f4f6fb";
+    roundRect(ctx, left, y, chartW, rowH, 12);
+    ctx.fill();
+
+    ctx.fillStyle = isBest ? "#af5843" : "#112d5b";
+    roundRect(ctx, left, y, Math.max(8, barW), rowH, 12);
+    ctx.fill();
+
+    ctx.fillStyle = "#0b1f45";
+    ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    const label = x.name.length > 28 ? x.name.slice(0, 25) + "..." : x.name;
+    ctx.fillText(label, left - 14, y + rowH / 2);
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#0b1f45";
+    ctx.font = "800 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.fillText(`${(x.value * 100).toFixed(1)}%`, left + barW + 10, y + rowH / 2);
+
+    if(isBest){
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 11px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("1", left + 16, y + rowH / 2);
+    }
   });
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
 }
 
 function shortLabel(label){
@@ -829,7 +816,7 @@ function renderResultsPage(st){
               ${rankingTable(res.ranking)}
             </div>
             <div>
-              <canvas class="chart" id="chart_${policy.id}" width="900" height="320"></canvas>
+              <canvas class="chart resultChart" id="chart_${policy.id}" width="900" height="320"></canvas>
             </div>
           </div>
         </div>
@@ -840,7 +827,7 @@ function renderResultsPage(st){
   setTimeout(()=>{
     POLICIES.forEach((policy, pIdx)=>{
       const res = computePolicyResults(st, pIdx);
-      drawBarChart(`chart_${policy.id}`, policy.code, policy.actions.map((a, i) => ({ name: a.code, value: res.scores[i] })));
+      drawBarChart(`chart_${policy.id}`, `${policy.code}. ${policy.name}`, policy.actions.map((a, i) => ({ name: `${a.code} ${a.name}`, value: res.scores[i] })));
     });
   }, 0);
 }
