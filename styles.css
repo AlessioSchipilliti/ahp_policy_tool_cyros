@@ -21,7 +21,9 @@ body{
   margin:0;
   font-family:Inter,Source Sans 3,Segoe UI,Roboto,Arial,sans-serif;
   color:var(--text);
-  background:radial-gradient(circle at top left,#E4BDB5 0,#D7A79D 45%,#C98D82 100%);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at top left, rgba(255,255,255,.35) 0, rgba(255,255,255,.08) 42%, rgba(16,33,61,.08) 100%), url("assets/color-swatch.png");
+  background-size: cover, 64px 64px;
 }
 .wrap{max-width:1260px;margin:0 auto;padding:22px 18px 48px}
 .brandTop{background:var(--card);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(255,255,255,.65)}

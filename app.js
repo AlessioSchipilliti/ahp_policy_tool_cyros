@@ -117,7 +117,7 @@ function renderCriteriaCards(){
   return `<div class="criteriaGrid">${CRITERIA.map(c=>`<article class="criterionCard"><h3>${escapeHtml(c.name)}</h3><p>${escapeHtml(c.description)}</p></article>`).join("")}</div>`;
 }
 function saatyScaleTable(){
-  return `<table class="scaleTable"><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>1</td><td>Equal importance</td></tr><tr><td>3</td><td>Moderate importance</td></tr><tr><td>5</td><td>Strong importance</td></tr><tr><td>7</td><td>Very strong importance</td></tr><tr><td>9</td><td>Extreme importance</td></tr><tr><td>2, 4, 6, 8</td><td>Intermediate judgements</td></tr></tbody></table>`;
+  return `<table class="scaleTable"><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>1</td><td>Equal importance</td></tr><tr><td>3</td><td>Moderate importance</td></tr><tr><td>5</td><td>Strong importance</td></tr><tr><td>7</td><td>Very strong importance</td></tr><tr><td>9</td><td>Extreme importance</td></tr></tbody></table>`;
 }
 function progressBlock(active){
   const steps=["Overview","Criteria","Policies","Results"];
@@ -194,16 +194,8 @@ function matrixSVG(containerId, labels, A, title){
   const colLabels = short.map((l,j)=>{ const x=left+j*cell+cell/2, y=top-28; return `<g transform="translate(${x},${y}) rotate(-22)">${svgMultiText(svgTextLines(l, 15, 3), 0, 0, {anchor:"start", size:n>=5?8.5:9.5, weight:850, fill:"#10213D", dy:10})}</g>`; }).join("");
   el.innerHTML = `<div class="heatWrap"><div class="heatTitle"><div><h3>${escapeHtml(title)}</h3><p>Pairwise comparison matrix</p></div></div><div class="matrixScroll"><svg class="heatSvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(title)}">
     <text x="20" y="26" font-size="15" font-weight="850" fill="#10213D">${escapeHtml(title)}</text>
-    <text x="20" y="45" font-size="9.5" fill="#52627A">Blue: row element preferred. White: equal importance. Orange: column element preferred.</text>
-    <text x="${left-14}" y="${top-18}" text-anchor="end" font-size="9" font-weight="850" fill="#52627A">ROW ELEMENT</text>
-    <text x="${left}" y="${top-66}" font-size="9" font-weight="850" fill="#52627A">COLUMN ELEMENT</text>
-    ${colLabels}${rowLabels}${cells}
-    <g transform="translate(20,${H-30})">
-      <rect x="0" y="0" width="13" height="13" rx="4" fill="${BRAND.row}" opacity=".88"/><text x="21" y="10.5" font-size="9.5" fill="#24324A">Row element preferred</text>
-      <rect x="148" y="0" width="13" height="13" rx="4" fill="#ffffff" stroke="rgba(36,50,74,.25)"/><text x="169" y="10.5" font-size="9.5" fill="#24324A">Equal importance</text>
-      <rect x="284" y="0" width="13" height="13" rx="4" fill="${BRAND.column}" opacity=".90"/><text x="305" y="10.5" font-size="9.5" fill="#24324A">Column element preferred</text>
-    </g>
-  </svg></div></div>`;
+                ${colLabels}${rowLabels}${cells}
+</svg></div></div>`;
 }
 
 function computePolicyResults(st, pIdx){
@@ -220,11 +212,7 @@ function priorityBars(items){
 function rankingTable(items){ return `<table class="rankingTable"><thead><tr><th>Rank</th><th>Action</th><th>Priority</th></tr></thead><tbody>${items.map((x,i)=>`<tr class="${i===0?'winnerRow':''}"><td>${i+1}${i===0?' <span class="miniBadge">Highest priority</span>':''}</td><td>${escapeHtml(x.code)} ${escapeHtml(x.name)}</td><td>${(x.score*100).toFixed(1)}%</td></tr>`).join("")}</tbody></table>`; }
 function criteriaWeightsTable(weights){ return `<table><thead><tr><th>Criterion</th><th>Weight</th></tr></thead><tbody>${CRITERIA.map((c,i)=>`<tr><td>${escapeHtml(c.name)}</td><td>${(weights[i]*100).toFixed(1)}%</td></tr>`).join("")}</tbody></table>`; }
 function allPolicyResults(st){ return POLICIES.map((_,i)=>computePolicyResults(st,i)); }
-function reportSummaryHTML(st){
-  const crit=ahpSolve(st.criteriaMatrix);
-  const policySections = allPolicyResults(st).map(r=>`<h4>${escapeHtml(r.policy.name)}</h4><p>The highest-ranked action is <strong>${escapeHtml(r.ranking[0].code)} ${escapeHtml(r.ranking[0].name)}</strong>, with a priority weight of <strong>${(r.ranking[0].score*100).toFixed(1)}%</strong>.</p>${rankingTable(r.ranking)}`).join("");
-  return `<section class="reportBox"><div class="sectionHead compact"><div><div class="panelTitle">Deliverable-ready output</div><h3>Recommended text for D.3.2.1</h3><p>This section is designed for inclusion in Section 3 and Section 4 of the policy recommendations deliverable.</p></div><button class="btn" id="btnPrintReport">Print report</button></div><h4>Methodological note</h4><p>The prioritisation of policy actions was carried out using the Analytic Hierarchy Process (AHP). The evaluation adopted three common criteria: Feasibility, Cross-border Cooperation and Territorial Impact. Pairwise comparisons were first used to determine the relative importance of the criteria. Actions were then assessed separately within each policy area, producing policy-specific priority rankings.</p><h4>Criteria weights</h4>${criteriaWeightsTable(crit.weights)}${policySections}</section>`;
-}
+function reportSummaryHTML(st){ return ""; }
 function exportReportJSON(st){
   const crit=ahpSolve(st.criteriaMatrix);
   const out={
@@ -244,7 +232,7 @@ function exportReportJSON(st){
 
 function renderOverviewPage(st){
   const view=document.getElementById("view"); if(!view) return;
-  view.innerHTML=`${progressBlock(0)}<section class="heroCard"><p class="eyebrow">Version 1.0</p><h2>CYROS AHP Decision Support Tool</h2><p>A web-based decision support system for prioritising cross-border cycling policy actions along the Italy-Croatia Adriatic-Ionian Corridor.</p><div class="heroActions"><a class="btn primary" href="criteria.html">Start assessment</a><a class="btn inline" href="results.html">View results</a></div></section>
+  view.innerHTML=`${progressBlock(0)}<section class="heroCard"><p class="eyebrow">Version 1.0</p><h2>CYROS AHP Decision Support Tool</h2><p>A web-based decision support system for prioritising cross-border cycling policy actions along the Italy-Croatia Adriatic-Ionian Corridor.</p><div class="heroActions"><a class="btn primary" href="criteria.html">Start assessment</a></div></section>
   <div class="divider"></div><section class="methodCard"><div><div class="panelTitle">Evaluation instructions</div><h3>Analytic Hierarchy Process</h3><p>Each comparison expresses the relative importance of one element over another using Saaty's 1 to 9 scale. Criteria are assessed first. The evaluation then proceeds policy by policy, comparing actions under each criterion.</p></div>${saatyScaleTable()}</section>
   <div class="divider"></div><div class="panelTitle">Shared criteria</div>${renderCriteriaCards()}
   <div class="divider"></div><div class="panelTitle">Policy areas</div><div class="policyGrid">${POLICIES.map(p=>`<article class="policyCard"><div class="policyIcon">${policyIcon(p.icon)}</div><div><span>${p.code}</span><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.objective)}</p></div></article>`).join("")}</div>`;
@@ -274,14 +262,13 @@ function renderPoliciesPage(st){
 }
 function renderResultsPage(st){
   const view=document.getElementById("view"); if(!view) return; const crit=ahpSolve(st.criteriaMatrix);
-  view.innerHTML=`${progressBlock(3)}<div class="sectionHead"><div><div class="panelTitle">Step 3</div><h2>Results</h2><p>Final action priorities are calculated separately for each policy area and are formatted for publication in the D.3.2.1 deliverable.</p></div>${crBadge(crit.cr)}</div><div class="resultGrid"><section class="resultCard"><h3>Criteria weights</h3>${priorityBars(CRITERIA.map((c,i)=>({code:"", name:c.name, score:crit.weights[i]})))}${criteriaWeightsTable(crit.weights)}</section></div>${POLICIES.map((p,i)=>{ const r=computePolicyResults(st,i); return `<section class="resultCard policyResult"><div class="resultHead"><div class="policyIcon">${policyIcon(p.icon)}</div><div><span>${p.code}</span><h3>${escapeHtml(p.name)}</h3><p>Action priority ranking</p></div></div>${priorityBars(r.ranking)}${rankingTable(r.ranking)}</section>`; }).join("")}<div class="divider"></div>${reportSummaryHTML(st)}`;
+  view.innerHTML=`${progressBlock(3)}<div class="sectionHead"><div><div class="panelTitle">Step 3</div><h2>Results</h2><p>Final action priorities are calculated separately for each policy area and are formatted for publication in the D.3.2.1 deliverable.</p></div>${crBadge(crit.cr)}</div><div class="resultGrid"><section class="resultCard"><h3>Criteria weights</h3>${priorityBars(CRITERIA.map((c,i)=>({code:"", name:c.name, score:crit.weights[i]})))}${criteriaWeightsTable(crit.weights)}</section></div>${POLICIES.map((p,i)=>{ const r=computePolicyResults(st,i); return `<section class="resultCard policyResult"><div class="resultHead"><div class="policyIcon">${policyIcon(p.icon)}</div><div><span>${p.code}</span><h3>${escapeHtml(p.name)}</h3><p>Action priority ranking</p></div></div>${priorityBars(r.ranking)}${rankingTable(r.ranking)}</section>`; }).join("")}`;
   const print=document.getElementById("btnPrintReport"); if(print) print.addEventListener("click",()=>window.print());
 }
 
 function wireCommon(st){
   const reset=document.getElementById("btnReset"); if(reset) reset.addEventListener("click",()=>{ localStorage.removeItem(STORAGE_KEY); location.href="index.html"; });
   const exp=document.getElementById("btnExport"); if(exp) exp.addEventListener("click",()=>{ const out={problem:st.problem, criteria:CRITERIA, policies:POLICIES, criteriaMatrix:st.criteriaMatrix, policyMatrices:st.policies}; const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="cyros_ahp_state.json"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
-  const report=document.getElementById("btnReportExport"); if(report) report.addEventListener("click",()=>exportReportJSON(st));
 }
 function main(){ const st=loadState(); wireCommon(st); setStatus(st); const page=document.body.dataset.page; if(page==="overview") renderOverviewPage(st); if(page==="criteria") renderCriteriaPage(st); if(page==="policies") renderPoliciesPage(st); if(page==="results") renderResultsPage(st); saveState(st); }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", main); else main();
