@@ -119,9 +119,67 @@ function renderCriteriaCards(){
 function saatyScaleTable(){
   return `<table class="scaleTable"><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>1</td><td>Equal importance</td></tr><tr><td>3</td><td>Moderate importance</td></tr><tr><td>5</td><td>Strong importance</td></tr><tr><td>7</td><td>Very strong importance</td></tr><tr><td>9</td><td>Extreme importance</td></tr></tbody></table>`;
 }
-function progressBlock(active){
-  const steps=["Overview","Criteria","Policies","Results"];
-  return `<div class="progressList">${steps.map((s,i)=>`<div class="progressItem ${i<active?'done':i===active?'active':''}"><span>${i<active?'✓':i+1}</span>${s}</div>`).join("")}</div>`;
+function matrixStarted(A){
+  if(!Array.isArray(A)) return false;
+  for(let i=0;i<A.length;i++){
+    for(let j=0;j<A[i].length;j++){
+      if(i !== j && Math.abs(Number(A[i][j]) - 1) > 1e-9) return true;
+    }
+  }
+  return false;
+}
+function completionItems(st){
+  const items = [{ key:"criteria", label:"Criteria", detail:"Shared criteria", done: matrixStarted(st.criteriaMatrix) }];
+  POLICIES.forEach((p, pIdx)=>{
+    CRITERIA.forEach((c, cIdx)=>{
+      items.push({
+        key:`p${pIdx}_c${cIdx}`,
+        label:`${p.code.replace("Policy ", "P")} · ${c.name.replace("Cross-border Cooperation", "Cooperation").replace("Territorial Impact", "Territorial")}`,
+        detail:`${p.name} · ${c.name}`,
+        done: matrixStarted(st.policies[pIdx].actionMatrices[cIdx])
+      });
+    });
+  });
+  return items;
+}
+function progressBlock(st, activeKey){
+  const items = completionItems(st);
+  const doneCount = items.filter(x=>x.done).length;
+  const pct = Math.round((doneCount / items.length) * 100);
+  return `<section class="assessmentProgress" aria-label="Assessment progress">
+    <div class="progressTop"><div><strong>Assessment progress</strong><span>${doneCount} of ${items.length} sections completed</span></div><strong>${pct}%</strong></div>
+    <div class="progressTrack"><div style="width:${pct}%"></div></div>
+    <div class="progressMap">${items.map((item, i)=>{
+      const cls = item.key === activeKey ? "active" : (item.done ? "done" : "todo");
+      const symbol = item.done ? "✓" : (i + 1);
+      return `<div class="progressItem ${cls}" title="${escapeHtml(item.detail)}"><span>${symbol}</span>${escapeHtml(item.label)}</div>`;
+    }).join("")}</div>
+  </section>`;
+}
+
+function showPoliciesTutorialOnce(){
+  if(document.body.dataset.page !== "policies") return;
+  if(sessionStorage.getItem("cyrosPoliciesTutorialSeen") === "true") return;
+  const modal = document.createElement("div");
+  modal.className = "tutorialOverlay";
+  modal.innerHTML = `<div class="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+    <div class="tutorialIcon">i</div>
+    <h2 id="tutorialTitle">Welcome to the Policy Assessment</h2>
+    <p>Each policy is evaluated separately under the three shared evaluation criteria: <strong>Feasibility</strong>, <strong>Cross-border Cooperation</strong> and <strong>Territorial Impact</strong>.</p>
+    <p>For each criterion, compare the policy actions in pairs using the slider.</p>
+    <div class="tutorialSliderGuide">
+      <div><strong>Left</strong><span>Choose this side if the left action is preferred.</span></div>
+      <div><strong>Centre</strong><span>Use the centre for equal importance.</span></div>
+      <div><strong>Right</strong><span>Choose this side if the right action is preferred.</span></div>
+    </div>
+    <p>Complete all pairwise comparisons for the current criterion. Then continue with the next criterion. After completing all three criteria, proceed to the next policy.</p>
+    <button type="button" class="btn primary" id="tutorialStartBtn">Start assessment</button>
+  </div>`;
+  document.body.appendChild(modal);
+  const close = ()=>{ sessionStorage.setItem("cyrosPoliciesTutorialSeen", "true"); modal.remove(); };
+  modal.querySelector("#tutorialStartBtn").addEventListener("click", close);
+  modal.addEventListener("click", e=>{ if(e.target === modal) close(); });
+  document.addEventListener("keydown", function escHandler(e){ if(e.key === "Escape"){ close(); document.removeEventListener("keydown", escHandler); } });
 }
 
 function pairwiseHTML(labels, descriptions, A){
@@ -129,7 +187,8 @@ function pairwiseHTML(labels, descriptions, A){
   for(let i=0;i<labels.length;i++){
     for(let j=i+1;j<labels.length;j++){
       const aij=A[i][j];
-      let v = aij>=1 ? Math.round(aij) : -Math.round(1/aij);
+      let v = aij>=1 ? -Math.round(aij) : Math.round(1/aij);
+      if(Math.abs(v) === 1) v = 1;
       if(v===0) v=1; if(v===-1) v=-2; v=Math.max(-9,Math.min(9,v));
       const left=descriptions?.[i] || ""; const right=descriptions?.[j] || "";
       html += `<div class="comparisonCard pairRow" data-i="${i}" data-j="${j}">
@@ -145,8 +204,8 @@ function bindPairwise(rootEl, A, onUpdate){
   rootEl.querySelectorAll(".pairRow").forEach(row=>{
     const i=Number(row.dataset.i), j=Number(row.dataset.j), rng=row.querySelector(".rng"), valBox=row.querySelector(".valBox"), dirBox=row.querySelector(".dirBox");
     const normalize=raw=>{ let v=Number(raw); if(v===0) v=1; if(v===-1) v=-2; return v<0?Math.max(-9,Math.min(-2,v)):Math.max(1,Math.min(9,v)); };
-    const setDirection=v=>{ dirBox.textContent = v===1 ? "Equal importance" : (v>1 ? "Left item preferred" : "Right item preferred"); valBox.textContent = v===1 ? "1" : String(Math.abs(v)); };
-    const apply=()=>{ const v=normalize(rng.value); rng.value=String(v); setDirection(v); const B=cloneMatrix(A); if(v>1){B[i][j]=v; B[j][i]=1/v;} else if(v===1){B[i][j]=1; B[j][i]=1;} else {const s=Math.abs(v); B[i][j]=1/s; B[j][i]=s;} for(let k=0;k<B.length;k++) B[k][k]=1; onUpdate(B); };
+    const setDirection=v=>{ dirBox.textContent = v===1 ? "Equal importance" : (v>1 ? "Right item preferred" : "Left item preferred"); valBox.textContent = v===1 ? "1" : String(Math.abs(v)); };
+    const apply=()=>{ const v=normalize(rng.value); rng.value=String(v); setDirection(v); const B=cloneMatrix(A); if(v>1){const s=Math.abs(v); B[i][j]=1/s; B[j][i]=s;} else if(v===1){B[i][j]=1; B[j][i]=1;} else {const s=Math.abs(v); B[i][j]=s; B[j][i]=1/s;} for(let k=0;k<B.length;k++) B[k][k]=1; onUpdate(B); };
     rng.addEventListener("input",()=>{ const v=normalize(rng.value); rng.value=String(v); setDirection(v); });
     rng.addEventListener("change",apply); setDirection(normalize(rng.value));
   });
@@ -232,7 +291,7 @@ function exportReportJSON(st){
 
 function renderOverviewPage(st){
   const view=document.getElementById("view"); if(!view) return;
-  view.innerHTML=`${progressBlock(0)}<section class="heroCard"><p class="eyebrow">Version 1.0</p><h2>CYROS AHP Decision Support Tool</h2><p>A web-based decision support system for prioritising cross-border cycling policy actions along the Italy-Croatia Adriatic-Ionian Corridor.</p><div class="heroActions"><a class="btn primary" href="criteria.html">Start assessment</a></div></section>
+  view.innerHTML=`${progressBlock(st, "overview")}<section class="heroCard"><p class="eyebrow">Version 1.0</p><h2>CYROS AHP Decision Support Tool</h2><p>A web-based decision support system for prioritising cross-border cycling policy actions along the Italy-Croatia Adriatic-Ionian Corridor.</p><div class="heroActions"><a class="btn primary" href="criteria.html">Start assessment</a></div></section>
   <div class="divider"></div><section class="methodCard"><div><div class="panelTitle">Evaluation instructions</div><h3>Analytic Hierarchy Process</h3><p>Each comparison expresses the relative importance of one element over another using Saaty's 1 to 9 scale. Criteria are assessed first. The evaluation then proceeds policy by policy, comparing actions under each criterion.</p></div>${saatyScaleTable()}</section>
   <div class="divider"></div><div class="panelTitle">Shared criteria</div>${renderCriteriaCards()}
   <div class="divider"></div><div class="panelTitle">Policy areas</div><div class="policyGrid">${POLICIES.map(p=>`<article class="policyCard"><div class="policyIcon">${policyIcon(p.icon)}</div><div><span>${p.code}</span><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.objective)}</p></div></article>`).join("")}</div>`;
@@ -240,7 +299,7 @@ function renderOverviewPage(st){
 function renderCriteriaPage(st){
   const view=document.getElementById("view"); if(!view) return; const solve=ahpSolve(st.criteriaMatrix);
   const desc=CRITERIA.map(c=>`<p>${escapeHtml(c.description)}</p>`);
-  view.innerHTML=`${progressBlock(1)}<div class="sectionHead"><div><div class="panelTitle">Step 1</div><h2>Compare the shared criteria</h2><p>The resulting criteria weights will be used across all four policy areas.</p></div>${crBadge(solve.cr)}</div>${renderCriteriaCards()}<div class="divider"></div><div id="critPairs"></div><div class="divider"></div><div id="critMatrix"></div><div class="divider"></div><div class="panelTitle">Criteria weights</div>${criteriaWeightsTable(solve.weights)}`;
+  view.innerHTML=`${progressBlock(st, "criteria")}<div class="sectionHead"><div><div class="panelTitle">Step 1</div><h2>Compare the shared criteria</h2><p>The resulting criteria weights will be used across all four policy areas.</p></div>${crBadge(solve.cr)}</div>${renderCriteriaCards()}<div class="divider"></div><div id="critPairs"></div><div class="divider"></div><div id="critMatrix"></div><div class="divider"></div><div class="panelTitle">Criteria weights</div>${criteriaWeightsTable(solve.weights)}`;
   const pairs=document.getElementById("critPairs"); pairs.innerHTML=pairwiseHTML(CRITERIA.map(c=>c.name), desc, st.criteriaMatrix);
   bindPairwise(pairs, st.criteriaMatrix, B=>{ st.criteriaMatrix=B; saveState(st); renderCriteriaPage(st); setStatus(st); });
   matrixSVG("critMatrix", CRITERIA.map(c=>c.name), st.criteriaMatrix, "Criteria comparison matrix");
@@ -248,7 +307,7 @@ function renderCriteriaPage(st){
 function renderPoliciesPage(st){
   const view=document.getElementById("view"); if(!view) return; const pIdx=st.activePolicyIdx, policy=POLICIES[pIdx], pst=st.policies[pIdx], cIdx=pst.activeActionCritIdx, crit=CRITERIA[cIdx], mat=pst.actionMatrices[cIdx], solve=ahpSolve(mat);
   const actionDesc=policy.actions.map(a=>`<ul>${a.bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join("")}</ul>`);
-  view.innerHTML=`${progressBlock(2)}<div class="sectionHead"><div><div class="panelTitle">Step 2</div><h2>Compare actions by policy area</h2><p>Each policy is assessed separately. Select a policy and compare its actions under each criterion.</p></div>${crBadge(solve.cr)}</div>
+  view.innerHTML=`${progressBlock(st, `p${pIdx}_c${cIdx}`)}<div class="sectionHead"><div><div class="panelTitle">Step 2</div><h2>Compare actions by policy area</h2><p>Each policy is assessed separately. Select a policy and compare its actions under each criterion.</p></div>${crBadge(solve.cr)}</div>
     <div class="tabs">${POLICIES.map((p,i)=>`<button class="tabBtn ${i===pIdx?'active':''}" data-policy="${i}">${p.code}</button>`).join("")}</div>
     <article class="policyHero"><div class="policyIcon large">${policyIcon(policy.icon)}</div><div><span>${policy.code}</span><h2>${escapeHtml(policy.name)}</h2><p>${escapeHtml(policy.objective)}</p></div></article>
     <div class="tabs critTabs">${CRITERIA.map((c,i)=>`<button class="tabBtn ${i===cIdx?'active':''}" data-criterion="${i}">${escapeHtml(c.name)}</button>`).join("")}</div>
@@ -259,10 +318,11 @@ function renderPoliciesPage(st){
   const pairs=document.getElementById("actionPairs"); pairs.innerHTML=pairwiseHTML(actionLabels(policy), actionDesc, mat);
   bindPairwise(pairs, mat, B=>{ pst.actionMatrices[cIdx]=B; saveState(st); renderPoliciesPage(st); setStatus(st); });
   matrixSVG("actionMatrix", actionLabels(policy), mat, `${policy.code}, ${crit.name}`);
+  setTimeout(showPoliciesTutorialOnce, 0);
 }
 function renderResultsPage(st){
   const view=document.getElementById("view"); if(!view) return; const crit=ahpSolve(st.criteriaMatrix);
-  view.innerHTML=`${progressBlock(3)}<div class="sectionHead"><div><div class="panelTitle">Step 3</div><h2>Results</h2><p>Final action priorities are calculated separately for each policy area and are formatted for publication in the D.3.2.1 deliverable.</p></div>${crBadge(crit.cr)}</div><div class="resultGrid"><section class="resultCard"><h3>Criteria weights</h3>${priorityBars(CRITERIA.map((c,i)=>({code:"", name:c.name, score:crit.weights[i]})))}${criteriaWeightsTable(crit.weights)}</section></div>${POLICIES.map((p,i)=>{ const r=computePolicyResults(st,i); return `<section class="resultCard policyResult"><div class="resultHead"><div class="policyIcon">${policyIcon(p.icon)}</div><div><span>${p.code}</span><h3>${escapeHtml(p.name)}</h3><p>Action priority ranking</p></div></div>${priorityBars(r.ranking)}${rankingTable(r.ranking)}</section>`; }).join("")}`;
+  view.innerHTML=`${progressBlock(st, "results")}<div class="sectionHead"><div><div class="panelTitle">Step 3</div><h2>Results</h2><p>Final action priorities are calculated separately for each policy area and are formatted for publication in the D.3.2.1 deliverable.</p></div>${crBadge(crit.cr)}</div><div class="resultGrid"><section class="resultCard"><h3>Criteria weights</h3>${priorityBars(CRITERIA.map((c,i)=>({code:"", name:c.name, score:crit.weights[i]})))}${criteriaWeightsTable(crit.weights)}</section></div>${POLICIES.map((p,i)=>{ const r=computePolicyResults(st,i); return `<section class="resultCard policyResult"><div class="resultHead"><div class="policyIcon">${policyIcon(p.icon)}</div><div><span>${p.code}</span><h3>${escapeHtml(p.name)}</h3><p>Action priority ranking</p></div></div>${priorityBars(r.ranking)}${rankingTable(r.ranking)}</section>`; }).join("")}`;
   const print=document.getElementById("btnPrintReport"); if(print) print.addEventListener("click",()=>window.print());
 }
 
