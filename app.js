@@ -1,83 +1,315 @@
-const STORAGE_KEY = "cyros_ahp_dss_session_v1";
 const RI = {1:0,2:0,3:0.58,4:0.90,5:1.12,6:1.24,7:1.32,8:1.41,9:1.45,10:1.49};
-const BRAND = { blue:"#16385F", row:"#1F6F8B", column:"#D68145", beige:"#D7A79D", text:"#24324A" };
 
-const CRITERIA = [
-  {id:"feasibility", name:"Feasibility", description:"Ease of policy implementation from technical, administrative, organisational and economic perspectives."},
-  {id:"cooperation", name:"Cross-border Cooperation", description:"Capacity of the policy to strengthen institutional coordination, harmonisation of standards and shared governance between Italy and Croatia."},
-  {id:"territorialImpact", name:"Territorial Impact", description:"Capacity of the policy to improve corridor continuity, accessibility and cycling experience, including attractiveness for international cycle tourism and benefits for local communities and tourism operators."}
-];
-
-const POLICIES = [
-  {id:"p1", code:"Policy 1", name:"Infrastructure Enhancement Policy", icon:"bridge", objective:"Ensure a continuous, safe and user-friendly cycling network along the Adriatic-Ionian Corridor.", actions:[
-    {code:"A1.1", name:"Completion of Missing Links", bullets:["Elimination of network discontinuities", "Completion of missing sections"]},
-    {code:"A1.2", name:"Safe Last-Mile Access", bullets:["Safe connections between railway stations, ports, urban centres and the cycling corridor", "Protected crossings", "Dedicated routes at intermodal hubs"]},
-    {code:"A1.3", name:"Uniform Signage", bullets:["Shared signage standards", "Continuous wayfinding along the corridor, including critical sections"]},
-    {code:"A1.4", name:"Bike Support Facilities", bullets:["Rest areas and drinking water fountains", "Maintenance and information points", "E-bike charging stations", "Secure bicycle parking and luggage storage"]}
-  ]},
-  {id:"p2", code:"Policy 2", name:"Intermodal Mobility Policy", icon:"intermodal", objective:"Enhance the integration of cycling with public transport and maritime transport.", actions:[
-    {code:"A2.1", name:"Bike-Train Enhancement", bullets:["Increased bicycle carrying capacity", "Enhanced seasonal services", "Simple and transparent booking"]},
-    {code:"A2.2", name:"Bike-Bus Integration", bullets:["Bicycle transport on regional buses", "Dedicated bicycle racks", "Integration into public service contracts"]},
-    {code:"A2.3", name:"Bike-Boat and Ferry Integration", bullets:["Common standards for bicycle transport", "Harmonised boarding procedures"]}
-  ]},
-  {id:"p3", code:"Policy 3", name:"Smart Mobility and Information Policy", icon:"smart", objective:"Improve corridor management and user experience through digital tools.", actions:[
-    {code:"A3.1", name:"Real-Time Route Information", bullets:["Diversions", "Roadworks", "Route interruptions"]},
-    {code:"A3.2", name:"Data-Driven Monitoring", bullets:["Automatic counters", "Harmonised data collection", "Shared dashboards"]},
-    {code:"A3.3", name:"Predictive Maintenance", bullets:["Route condition monitoring"]}
-  ]},
-  {id:"p4", code:"Policy 4", name:"Cross-Border Governance Policy", icon:"governance", objective:"Strengthen institutional coordination and ensure shared corridor management.", actions:[
-    {code:"A4.1", name:"Cross-Border Steering Committee", bullets:["Permanent Italy-Croatia body", "Strategic coordination"]},
-    {code:"A4.2", name:"Stakeholder Working Groups", bullets:["Permanent involvement of public authorities, tourism operators and associations", "Training for administrations and operators"]},
-    {code:"A4.3", name:"Communication and Promotion", bullets:["Common branding", "Joint campaigns", "Participation in international fairs"]}
-  ]}
-];
+const CONFIG = {
+  problem: {
+    name: "Italy-Croatia Adriatic-Ionian Cycling Corridor",
+    goal: "Prioritise policy actions through a transparent AHP-based decision support framework."
+  },
+  criteria: [
+    { id:"feasibility", name:"Feasibility", description:"Ease of policy implementation from technical, administrative, organisational and economic perspectives." },
+    { id:"cooperation", name:"Cross-border Cooperation", description:"Capacity to strengthen institutional coordination, harmonisation of standards and shared governance between Italy and Croatia." },
+    { id:"territorialImpact", name:"Territorial Impact", description:"Capacity to improve corridor continuity, accessibility and the cycling experience, including attractiveness for international cycle tourism and benefits for local communities and operators." }
+  ],
+  policies: [
+    { id:"p1", code:"Policy 1", icon:"bridge", name:"Infrastructure Enhancement Policy", objective:"Ensure a continuous, safe and user-friendly cycling network along the Adriatic-Ionian Corridor.", actions:[
+      { code:"A1.1", name:"Completion of Missing Links", bullets:["Elimination of network discontinuities", "Completion of missing sections"] },
+      { code:"A1.2", name:"Safe Last-Mile Access", bullets:["Safe connections between railway stations, ports, urban centres and the cycling corridor", "Protected crossings", "Dedicated routes at intermodal hubs"] },
+      { code:"A1.3", name:"Uniform Signage", bullets:["Shared signage standards", "Continuous wayfinding along the corridor, including critical sections"] },
+      { code:"A1.4", name:"Bike Support Facilities", bullets:["Rest areas and drinking water fountains", "Maintenance and information points", "E-bike charging", "Secure bicycle parking and luggage storage"] }
+    ]},
+    { id:"p2", code:"Policy 2", icon:"train", name:"Intermodal Mobility Policy", objective:"Enhance the integration of cycling with public and maritime transport.", actions:[
+      { code:"A2.1", name:"Bike-Train Enhancement", bullets:["Increased bicycle carriage capacity", "Enhanced seasonal services", "Simple and transparent booking"] },
+      { code:"A2.2", name:"Bike-Bus Integration", bullets:["Bicycle transport on regional buses", "Dedicated bike racks", "Integration into public service contracts"] },
+      { code:"A2.3", name:"Bike-Boat and Ferry Integration", bullets:["Common standards for bicycle carriage", "Harmonised boarding procedures"] }
+    ]},
+    { id:"p3", code:"Policy 3", icon:"data", name:"Smart Mobility and Information Policy", objective:"Improve corridor management and user experience through digital tools.", actions:[
+      { code:"A3.1", name:"Real-Time Route Information", bullets:["Detours", "Roadworks", "Temporary interruptions"] },
+      { code:"A3.2", name:"Data-Driven Monitoring", bullets:["Automatic counters", "Harmonised data collection", "Shared dashboards"] },
+      { code:"A3.3", name:"Predictive Maintenance", bullets:["Route condition monitoring"] }
+    ]},
+    { id:"p4", code:"Policy 4", icon:"network", name:"Cross-Border Governance Policy", objective:"Strengthen institutional coordination and ensure shared management of the corridor.", actions:[
+      { code:"A4.1", name:"Cross-Border Steering Committee", bullets:["Permanent Italy-Croatia body", "Strategic coordination"] },
+      { code:"A4.2", name:"Stakeholder Working Groups", bullets:["Permanent involvement of public bodies, tourism operators and associations", "Training for administrations and operators"] },
+      { code:"A4.3", name:"Communication and Promotion", bullets:["Common branding", "Joint campaigns", "Participation in international fairs"] }
+    ]}
+  ]
+};
 
 function identityMatrix(n){ return Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:1)); }
-function defaultPolicyState(policy){ return {id:policy.id, actionMatrices:CRITERIA.map(()=>identityMatrix(policy.actions.length)), activeActionCritIdx:0}; }
-function defaultState(){ return {problem:{name:"Italy-Croatia Adriatic-Ionian Cycling Corridor", goal:"Prioritise policy actions through an AHP model with shared criteria and policy-level analyses."}, criteriaMatrix:identityMatrix(CRITERIA.length), policies:POLICIES.map(defaultPolicyState), activePolicyIdx:0, lastSaved:null}; }
-function validMatrix(A,n){ return Array.isArray(A) && A.length===n && A.every(r=>Array.isArray(r)&&r.length===n); }
-function normalizeState(st){ const fresh=defaultState(); if(!st || typeof st!=="object") return fresh; if(validMatrix(st.criteriaMatrix, CRITERIA.length)) fresh.criteriaMatrix=st.criteriaMatrix; if(Number.isFinite(st.activePolicyIdx)) fresh.activePolicyIdx=Math.max(0,Math.min(POLICIES.length-1,st.activePolicyIdx)); if(st.lastSaved) fresh.lastSaved=st.lastSaved; const saved=Array.isArray(st.policies)?st.policies:[]; POLICIES.forEach((policy,pIdx)=>{ const src=saved.find(x=>x&&x.id===policy.id)||saved[pIdx]; if(!src) return; const n=policy.actions.length; if(Array.isArray(src.actionMatrices)){ src.actionMatrices.forEach((m,cIdx)=>{ if(cIdx<CRITERIA.length && validMatrix(m,n)) fresh.policies[pIdx].actionMatrices[cIdx]=m; }); } if(Number.isFinite(src.activeActionCritIdx)) fresh.policies[pIdx].activeActionCritIdx=Math.max(0,Math.min(CRITERIA.length-1,src.activeActionCritIdx)); }); return fresh; }
-function isReload(){ try{ const nav=performance.getEntriesByType("navigation")[0]; if(nav) return nav.type === "reload"; return performance.navigation && performance.navigation.type === 1; }catch{return false;} }
-function loadState(){ try{ if(isReload()) sessionStorage.removeItem(STORAGE_KEY); const raw=sessionStorage.getItem(STORAGE_KEY); return raw?normalizeState(JSON.parse(raw)):defaultState(); }catch{return defaultState();} }
-function saveState(st){ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(st)); setStatus(st); }
+function makeState(){
+  return {
+    criteriaMatrix: identityMatrix(CONFIG.criteria.length),
+    activePolicy: 0,
+    activeActionCriterion: 0,
+    policyMatrices: CONFIG.policies.map(p => ({ id:p.id, actionMatrices: CONFIG.criteria.map(()=>identityMatrix(p.actions.length)) }))
+  };
+}
+let state = makeState();
+
 function escapeHtml(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
 function cloneMatrix(A){ return A.map(r=>r.slice()); }
-function actionLabels(policy){ return policy.actions.map(a=>`${a.code} ${a.name}`); }
-function actionDescriptions(policy){ return policy.actions.map(a=>`<ul>${a.bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join("")}</ul>`); }
-function criterionDescriptions(){ return CRITERIA.map(c=>`<p>${escapeHtml(c.description)}</p>`); }
 
-function powerIterationWeights(A, maxIter=2000, tol=1e-12){ const n=A.length; let w=Array(n).fill(1/n); for(let it=0;it<maxIter;it++){ const Aw=Array(n).fill(0); for(let i=0;i<n;i++) for(let j=0;j<n;j++) Aw[i]+=A[i][j]*w[j]; const sum=Aw.reduce((a,b)=>a+b,0); const nw=Aw.map(x=>x/sum); let d=0; for(let i=0;i<n;i++) d=Math.max(d,Math.abs(nw[i]-w[i])); w=nw; if(d<tol) break; } const Aw2=Array(n).fill(0); for(let i=0;i<n;i++) for(let j=0;j<n;j++) Aw2[i]+=A[i][j]*w[j]; const lambdaMax=Aw2.reduce((a,v,i)=>a+(v/w[i]),0)/n; return {weights:w,lambdaMax}; }
-function consistency(A, lambdaMax){ const n=A.length; if(n<=2) return {ci:0,cr:0}; const ci=(lambdaMax-n)/(n-1); const ri=RI[n]||1.49; return {ci, cr:ri===0?0:ci/ri}; }
-function ahpSolve(A){ const r=powerIterationWeights(A); return {...r, ...consistency(A,r.lambdaMax)}; }
-function crBadge(cr){ const cls=cr<=0.10?"good":(cr<=0.20?"mid":"warn"); const txt=cr<=0.10?"Acceptable":(cr<=0.20?"Review suggested":"Inconsistent"); return `<span class="badge ${cls}">${txt}, CR ${cr.toFixed(3)}</span>`; }
-function setStatus(st){ const el=document.getElementById("status"); if(!el) return; el.innerHTML=`<div>${CRITERIA.length} criteria, ${POLICIES.length} policy areas</div><div>Session data reset on page reload</div>`; }
+function setPairwise(A,i,j,sliderValue){
+  const B = cloneMatrix(A);
+  if(sliderValue === 1){ B[i][j]=1; B[j][i]=1; }
+  else if(sliderValue > 1){ B[i][j]=sliderValue; B[j][i]=1/sliderValue; }
+  else { const s = Math.abs(sliderValue); B[i][j]=1/s; B[j][i]=s; }
+  for(let k=0;k<B.length;k++) B[k][k]=1;
+  return B;
+}
 
-function policyIcon(type){ const common='fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'; if(type==="bridge") return `<svg viewBox="0 0 64 64" aria-hidden="true"><path ${common} d="M9 43h46M13 43c4-14 12-22 19-22s15 8 19 22M20 43V31m12 12V23m12 20V31"/><circle cx="21" cy="48" r="3" fill="currentColor"/><circle cx="43" cy="48" r="3" fill="currentColor"/></svg>`; if(type==="intermodal") return `<svg viewBox="0 0 64 64" aria-hidden="true"><path ${common} d="M15 16h34a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H15a4 4 0 0 1-4-4V20a4 4 0 0 1 4-4Zm4 26-5 8m31-8 5 8M18 24h28M18 33h12m8 0h8"/><circle cx="22" cy="42" r="3" fill="currentColor"/><circle cx="42" cy="42" r="3" fill="currentColor"/></svg>`; if(type==="smart") return `<svg viewBox="0 0 64 64" aria-hidden="true"><path ${common} d="M22 12h20a4 4 0 0 1 4 4v32a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4Zm6 34h8M25 21h14m-14 8h14m-14 8h8"/><path ${common} d="M48 22c4 1 7 4 8 8m-8 10c4-1 7-4 8-8"/></svg>`; return `<svg viewBox="0 0 64 64" aria-hidden="true"><path ${common} d="M32 10 12 22l20 12 20-12L32 10Zm-14 20v14c4 5 9 8 14 8s10-3 14-8V30M22 28v11m10-6v13m10-18v11"/></svg>`; }
+function powerIterationWeights(A, maxIter=1200, tol=1e-11){
+  const n=A.length;
+  let w=Array(n).fill(1/n);
+  for(let it=0;it<maxIter;it++){
+    const Aw=Array(n).fill(0);
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) Aw[i]+=A[i][j]*w[j];
+    const sum=Aw.reduce((a,b)=>a+b,0) || 1;
+    const w2=Aw.map(x=>x/sum);
+    let diff=0;
+    for(let i=0;i<n;i++) diff=Math.max(diff, Math.abs(w2[i]-w[i]));
+    w=w2;
+    if(diff<tol) break;
+  }
+  const Aw=Array(n).fill(0);
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++) Aw[i]+=A[i][j]*w[j];
+  const lambdaMax=Aw.reduce((a,v,i)=>a+(v/(w[i]||1)),0)/n;
+  return {weights:w, lambdaMax};
+}
+function ahpSolve(A){
+  const {weights, lambdaMax}=powerIterationWeights(A);
+  const n=A.length;
+  const ci=n<=2 ? 0 : (lambdaMax-n)/(n-1);
+  const ri=RI[n] ?? 1.49;
+  const cr=ri===0 ? 0 : ci/ri;
+  return {weights, lambdaMax, ci, cr};
+}
+function crLabel(cr){
+  if(cr <= 0.10) return { cls:"good", text:`Acceptable CR ${cr.toFixed(3)}` };
+  if(cr <= 0.20) return { cls:"mid", text:`Review suggested CR ${cr.toFixed(3)}` };
+  return { cls:"bad", text:`Inconsistent CR ${cr.toFixed(3)}` };
+}
 
-function progress(active){ const items=[['overview','Overview','index.html'],['criteria','Criteria','criteria.html'],['policies','Policies','policies.html'],['results','Results','results.html']]; const idx=items.findIndex(x=>x[0]===active); return `<div class="progress">${items.map((it,i)=>`<a class="step ${i<idx?'done':i===idx?'current':''}" href="${it[2]}"><span>${i+1}</span>${it[1]}</a>`).join("")}</div>`; }
-function renderCriteriaCards(){ return `<div class="criteriaGrid">${CRITERIA.map(c=>`<article class="criterionCard"><h3>${escapeHtml(c.name)}</h3><p>${escapeHtml(c.description)}</p></article>`).join("")}</div>`; }
-function renderPolicyCards(){ return `<div class="policyGrid">${POLICIES.map(p=>`<article class="policyCard"><div class="policyIcon">${policyIcon(p.icon)}</div><div><span>${p.code}</span><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.objective)}</p></div></article>`).join("")}</div>`; }
+function iconSvg(name){
+  const common = `fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"`;
+  const icons = {
+    bridge:`<svg viewBox="0 0 48 48" aria-hidden="true"><path ${common} d="M6 34h36M10 34V18m28 16V18M12 20c8-10 16-10 24 0M16 28h16M20 18v16m8-16v16"/></svg>`,
+    train:`<svg viewBox="0 0 48 48" aria-hidden="true"><path ${common} d="M15 6h18a5 5 0 0 1 5 5v20a7 7 0 0 1-7 7H17a7 7 0 0 1-7-7V11a5 5 0 0 1 5-5Zm-1 14h20M16 38l-4 5m20-5 4 5M17 30h.1M31 30h.1"/></svg>`,
+    data:`<svg viewBox="0 0 48 48" aria-hidden="true"><path ${common} d="M10 34c14-1 24-10 30-25M12 18c13 0 22 7 24 20M11 34c0-10 7-17 17-17m-8 20c-4-9-2-17 5-24"/></svg>`,
+    network:`<svg viewBox="0 0 48 48" aria-hidden="true"><circle ${common} cx="24" cy="10" r="5"/><circle ${common} cx="10" cy="34" r="5"/><circle ${common} cx="38" cy="34" r="5"/><circle ${common} cx="24" cy="34" r="5"/><path ${common} d="M22 15 12 29m14-14 10 14M15 34h4m10 0h4"/></svg>`
+  };
+  return icons[name] || icons.network;
+}
 
-function sliderValue(aij){ let v=aij>=1?Math.round(aij):-Math.round(1/aij); if(v===0) v=1; if(v===-1) v=-2; return Math.max(-9, Math.min(9, v)); }
-function pairwiseHTML(labels, descriptions, A){ let html=""; for(let i=0;i<labels.length;i++){ for(let j=i+1;j<labels.length;j++){ const v=sliderValue(A[i][j]); html+=`<div class="comparisonCard pairRow" data-i="${i}" data-j="${j}"><div class="compareItem"><div class="compareLabel">${escapeHtml(labels[i])}</div>${descriptions?.[i]||""}</div><div class="pairMid"><div class="scaleLabels"><span>Left element</span><span>Equal</span><span>Right element</span></div><input type="range" class="rng" min="-9" max="9" step="1" value="${v}" /><div class="pairReadout"><span class="valBox">${v}</span><span class="dirBox">${v===1?'Equal importance':v>1?'Left element preferred':'Right element preferred'}</span></div></div><div class="compareItem right"><div class="compareLabel">${escapeHtml(labels[j])}</div>${descriptions?.[j]||""}</div></div>`; }} return html; }
-function bindPairwise(root,A,onUpdate){ root.querySelectorAll('.pairRow').forEach(row=>{ const i=Number(row.dataset.i), j=Number(row.dataset.j); const rng=row.querySelector('.rng'), val=row.querySelector('.valBox'), dir=row.querySelector('.dirBox'); const norm=raw=>{ let v=Number(raw); if(v===0) v=1; if(v===-1) v=-2; if(v<0) return Math.max(-9,Math.min(-2,v)); return Math.max(1,Math.min(9,v)); }; const label=v=>v===1?'Equal importance':v>1?'Left element preferred':'Right element preferred'; const updateUi=v=>{ rng.value=String(v); val.textContent=String(v); dir.textContent=label(v); }; rng.addEventListener('input',()=>updateUi(norm(rng.value))); rng.addEventListener('change',()=>{ const v=norm(rng.value); const B=cloneMatrix(A); if(v>1){ B[i][j]=v; B[j][i]=1/v; } else if(v===1){ B[i][j]=1; B[j][i]=1; } else { const s=Math.abs(v); B[i][j]=1/s; B[j][i]=s; } for(let k=0;k<B.length;k++) B[k][k]=1; onUpdate(B); }); updateUi(norm(rng.value)); }); }
+function route(){ return (location.hash || "#overview").replace("#",""); }
+function setRoute(r){ location.hash = r; render(); }
+function updateNav(){ document.querySelectorAll("[data-route]").forEach(el=>el.classList.toggle("active", el.dataset.route===route())); }
 
-function wrapLabel(text, max=14){ const words=String(text).split(/\s+/); const lines=[]; let cur=""; for(const w of words){ if((cur+" "+w).trim().length>max && cur){ lines.push(cur); cur=w; } else cur=(cur+" "+w).trim(); } if(cur) lines.push(cur); return lines.slice(0,3); }
-function mix(c1,c2,t){ const a=c1.match(/\w\w/g).map(x=>parseInt(x,16)); const b=c2.match(/\w\w/g).map(x=>parseInt(x,16)); return '#'+a.map((x,i)=>Math.round(x+(b[i]-x)*t).toString(16).padStart(2,'0')).join(''); }
-function matrixColor(v){ if(Math.abs(v-1)<1e-9) return '#ffffff'; const t=Math.min(1, Math.abs(Math.log(v))/Math.log(9)); return v>1 ? mix('#ffffff', BRAND.row, 0.25+0.65*t) : mix('#ffffff', BRAND.column, 0.25+0.65*t); }
-function matrixSVG(labels,A,title,subtitle){ const n=labels.length; const cell=n>4?58:70; const left=n>4?145:170; const top=95; const width=left+n*cell+20; const height=top+n*cell+22; let s=`<div class="heatWrap"><div class="heatTitle"><div><h3>${escapeHtml(title)}</h3>${subtitle?`<p>${escapeHtml(subtitle)}</p>`:''}</div><button type="button" class="infoBtn" title="Values greater than 1 indicate that the row element is preferred over the column element. Values lower than 1 indicate that the column element is preferred over the row element.">ⓘ</button></div><svg class="heatSvg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(title)}">`; s+=`<rect x="0" y="0" width="${width}" height="${height}" rx="16" fill="#fff"/>`; for(let j=0;j<n;j++){ const lines=wrapLabel(labels[j].replace(/^A\d\.\d\s*/,''),16); const x=left+j*cell+cell/2; lines.forEach((line,k)=>{ s+=`<text x="${x}" y="${26+k*14}" text-anchor="middle" font-size="11" font-weight="700" fill="${BRAND.text}">${escapeHtml(line)}</text>`; }); } for(let i=0;i<n;i++){ const lines=wrapLabel(labels[i].replace(/^A\d\.\d\s*/,''),19); const y=top+i*cell+cell/2-(lines.length-1)*7; lines.forEach((line,k)=>{ s+=`<text x="${left-10}" y="${y+k*14}" text-anchor="end" font-size="11" font-weight="700" fill="${BRAND.text}">${escapeHtml(line)}</text>`; }); } for(let i=0;i<n;i++){ for(let j=0;j<n;j++){ const v=A[i][j]; const x=left+j*cell, y=top+i*cell; const fill=matrixColor(v); s+=`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="10" fill="${fill}" stroke="#E7E0DA"/>`; const txt=v>=1?Number(v).toFixed(v===1?0:2):Number(v).toFixed(2); s+=`<text x="${x+cell/2}" y="${y+cell/2+5}" text-anchor="middle" font-size="14" font-weight="800" fill="${Math.abs(Math.log(v||1))>.9?'#fff':BRAND.text}">${txt}</text>`; }} } s+=`</svg></div>`; return s; }
+function card(title, body){ return `<section class="card"><h2>${title}</h2>${body}</section>`; }
 
-function computePolicyResult(st, pIdx){ const policy=POLICIES[pIdx]; const crit=ahpSolve(st.criteriaMatrix); const pState=st.policies[pIdx]; const actionSolves=pState.actionMatrices.map(m=>ahpSolve(m)); const scores=Array(policy.actions.length).fill(0); for(let i=0;i<scores.length;i++){ for(let c=0;c<CRITERIA.length;c++) scores[i]+=crit.weights[c]*actionSolves[c].weights[i]; } const ranking=policy.actions.map((a,i)=>({code:a.code,name:a.name,score:scores[i]})).sort((a,b)=>b.score-a.score); return {policy, crit, actionSolves, scores, ranking}; }
-function rankingBars(ranking){ const max=Math.max(...ranking.map(x=>x.score), 1e-9); return `<div class="rankBars">${ranking.map((x,i)=>`<div class="rankBarRow"><div class="rankLabel"><span class="rankNum">${i+1}</span><span>${escapeHtml(x.code)} ${escapeHtml(x.name)}</span></div><div class="barTrack"><div class="barFill ${i===0?'top':''}" style="width:${(x.score/max*100).toFixed(2)}%"></div></div><div class="barValue">${(x.score*100).toFixed(1)}%</div></div>`).join("")}</div>`; }
-function rankingTable(ranking){ return `<table><thead><tr><th>Rank</th><th>Action</th><th>Priority</th></tr></thead><tbody>${ranking.map((x,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(x.code)} ${escapeHtml(x.name)}${i===0?' <span class="miniBadge">Highest priority</span>':''}</td><td>${(x.score*100).toFixed(1)}%</td></tr>`).join("")}</tbody></table>`; }
-function weightsTable(labels, weights){ return `<table><thead><tr><th>Element</th><th>Weight</th></tr></thead><tbody>${labels.map((x,i)=>`<tr><td>${escapeHtml(x)}</td><td>${(weights[i]*100).toFixed(1)}%</td></tr>`).join("")}</tbody></table>`; }
-function deliverableText(result){ const top=result.ranking[0]; return `<div class="deliverableBox"><h4>Text for Deliverable D.3.2.1</h4><p>The AHP assessment identifies <strong>${escapeHtml(top.code)} ${escapeHtml(top.name)}</strong> as the highest-priority action within the ${escapeHtml(result.policy.name)}. This result should be considered when translating CYROS policy recommendations into local and regional implementation priorities.</p></div>`; }
+function renderOverview(){
+  app.innerHTML = `
+    ${card("Decision support framework", `
+      <p>This web application supports the prioritisation of policy actions for the Italy-Croatia Adriatic-Ionian Cycling Corridor through the Analytic Hierarchy Process.</p>
+      <div class="methodGrid">
+        <div><strong>1. Criteria weighting</strong><span>Compare the three common evaluation criteria.</span></div>
+        <div><strong>2. Policy assessment</strong><span>Compare actions within each policy area under each criterion.</span></div>
+        <div><strong>3. Results dashboard</strong><span>Review rankings, consistency ratios and report-ready outputs.</span></div>
+      </div>
+    `)}
+    ${card("Saaty's scale", `
+      <div class="scaleGrid">
+        <div><b>1</b><span>Equal importance</span></div>
+        <div><b>3</b><span>Moderate importance</span></div>
+        <div><b>5</b><span>Strong importance</span></div>
+        <div><b>7</b><span>Very strong importance</span></div>
+        <div><b>9</b><span>Extreme importance</span></div>
+      </div>
+    `)}
+    ${card("Evaluation criteria", `<div class="criteriaCards">${CONFIG.criteria.map(c=>`<article><h3>${escapeHtml(c.name)}</h3><p>${escapeHtml(c.description)}</p></article>`).join("")}</div>`)}
+  `;
+}
 
-function renderOverview(st){ const view=document.getElementById('view'); view.innerHTML=`${progress('overview')}<section class="heroCopy"><h2>Decision support for cross-border cycle tourism policy</h2><p>This web application supports the prioritisation of policy actions for the Italy-Croatia Adriatic-Ionian Cycling Corridor through the Analytic Hierarchy Process. The evaluation is structured around three shared criteria and four policy areas, providing a transparent framework for decision making and for preparing results for Deliverable D.3.2.1.</p><div class="heroActions"><a class="btn primary" href="criteria.html">Start Assessment</a><a class="btn" href="results.html">View Results</a></div></section><div class="sectionHead"><div><h2>Evaluation criteria</h2><p>All policy areas are assessed through the same three criteria.</p></div></div>${renderCriteriaCards()}<div class="sectionHead"><div><h2>Policy areas</h2><p>Each policy area has a separate AHP action ranking.</p></div></div>${renderPolicyCards()}`; }
-function renderCriteriaPage(st){ const view=document.getElementById('view'); const solve=ahpSolve(st.criteriaMatrix); view.innerHTML=`${progress('criteria')}<div class="sectionHead"><div><h2>Criteria assessment</h2><p>Compare the shared evaluation criteria before proceeding to the policy-level action assessments.</p></div><div>${crBadge(solve.cr)}</div></div>${renderCriteriaCards()}<div class="divider"></div><div id="pairs">${pairwiseHTML(CRITERIA.map(c=>c.name), criterionDescriptions(), st.criteriaMatrix)}</div>${matrixSVG(CRITERIA.map(c=>c.name), st.criteriaMatrix, 'Criteria Pairwise Comparison Matrix','Shared criteria')}<div class="divider"></div><h2>Criteria weights</h2>${weightsTable(CRITERIA.map(c=>c.name), solve.weights)}<div class="heroActions"><a class="btn" href="index.html">Previous</a><a class="btn primary" href="policies.html">Continue to Policies</a></div>`; bindPairwise(document.getElementById('pairs'), st.criteriaMatrix, B=>{ st.criteriaMatrix=B; saveState(st); renderCriteriaPage(st); }); }
-function renderPoliciesPage(st){ const view=document.getElementById('view'); let pIdx=st.activePolicyIdx||0; const policy=POLICIES[pIdx]; const pState=st.policies[pIdx]; const cIdx=pState.activeActionCritIdx||0; const mat=pState.actionMatrices[cIdx]; const solve=ahpSolve(mat); const labels=actionLabels(policy); view.innerHTML=`${progress('policies')}<div class="sectionHead"><div><h2>Policy assessment</h2><p>Select a policy area and compare its actions under each criterion.</p></div><div>${crBadge(solve.cr)}</div></div><div class="tabs">${POLICIES.map((p,i)=>`<button class="tabBtn ${i===pIdx?'active':''}" data-policy="${i}">${p.code}</button>`).join("")}</div><div class="policyHero"><div class="policyIcon large">${policyIcon(policy.icon)}</div><div><span>${policy.code}</span><h2>${escapeHtml(policy.name)}</h2><p>${escapeHtml(policy.objective)}</p></div></div><div class="tabs">${CRITERIA.map((c,i)=>`<button class="tabBtn ${i===cIdx?'active':''}" data-criterion="${i}">${escapeHtml(c.name)}</button>`).join("")}</div><div class="criterionFocus"><h3>Criterion: ${escapeHtml(CRITERIA[cIdx].name)}</h3><p>${escapeHtml(CRITERIA[cIdx].description)}</p></div><div class="divider"></div><div id="pairs">${pairwiseHTML(labels, actionDescriptions(policy), mat)}</div>${matrixSVG(labels, mat, `${policy.name} Matrix`, `Criterion: ${CRITERIA[cIdx].name}`)}<div class="heroActions"><a class="btn" href="criteria.html">Previous</a><a class="btn primary" href="results.html">View Results</a></div>`; view.querySelectorAll('[data-policy]').forEach(b=>b.addEventListener('click',()=>{ st.activePolicyIdx=Number(b.dataset.policy); saveState(st); renderPoliciesPage(st); })); view.querySelectorAll('[data-criterion]').forEach(b=>b.addEventListener('click',()=>{ st.policies[pIdx].activeActionCritIdx=Number(b.dataset.criterion); saveState(st); renderPoliciesPage(st); })); bindPairwise(document.getElementById('pairs'), mat, B=>{ st.policies[pIdx].actionMatrices[cIdx]=B; saveState(st); renderPoliciesPage(st); }); }
-function renderResultsPage(st){ const view=document.getElementById('view'); const crit=ahpSolve(st.criteriaMatrix); const results=POLICIES.map((_,i)=>computePolicyResult(st,i)); view.innerHTML=`${progress('results')}<div class="sectionHead"><div><h2>Results dashboard</h2><p>Priority rankings are reported separately for each policy area and are ready to support Deliverable D.3.2.1.</p></div><div>${crBadge(crit.cr)}</div></div><div class="resultCard"><div class="resultHead"><div class="policyIcon large">${policyIcon('governance')}</div><div><span>Shared criteria</span><h2>Criteria weights</h2></div></div>${rankingBars(CRITERIA.map((c,i)=>({code:"",name:c.name,score:crit.weights[i]})).sort((a,b)=>b.score-a.score))}${weightsTable(CRITERIA.map(c=>c.name),crit.weights)}</div>${results.map((r,idx)=>`<section class="resultCard"><div class="resultHead"><div class="policyIcon large">${policyIcon(r.policy.icon)}</div><div><span>${r.policy.code}</span><h2>${escapeHtml(r.policy.name)}</h2><p>${escapeHtml(r.policy.objective)}</p></div></div>${rankingBars(r.ranking)}${rankingTable(r.ranking)}${deliverableText(r)}<details><summary>Action comparison matrices and consistency ratios</summary>${CRITERIA.map((c,cIdx)=>`<div class="matrixResult"><h3>${escapeHtml(c.name)} ${crBadge(r.actionSolves[cIdx].cr)}</h3>${matrixSVG(actionLabels(r.policy), st.policies[idx].actionMatrices[cIdx], `${r.policy.code} Matrix`, `Criterion: ${c.name}`)}</div>`).join("")}</details></section>`).join("")}`; }
+function comparisonValue(A,i,j){
+  const v=A[i][j];
+  if(v>=1) return Math.round(v);
+  return -Math.round(1/v);
+}
+function itemDescription(item){
+  if(item.description) return `<p>${escapeHtml(item.description)}</p>`;
+  if(item.bullets) return `<ul>${item.bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join("")}</ul>`;
+  return "";
+}
+function pairwiseEditor(labels, items, A, onUpdate){
+  let html = `<div class="pairwiseList">`;
+  for(let i=0;i<labels.length;i++){
+    for(let j=i+1;j<labels.length;j++){
+      const v = comparisonValue(A,i,j);
+      html += `
+        <div class="compareCard" data-i="${i}" data-j="${j}">
+          <article class="compareSide"><span>${escapeHtml(labels[i])}</span>${itemDescription(items[i])}</article>
+          <div class="sliderBox">
+            <input class="pairSlider" type="range" min="-9" max="9" step="1" value="${v}" />
+            <div class="sliderMeta"><span class="leftPref">Left</span><strong class="pairValue">${v}</strong><span class="rightPref">Right</span></div>
+          </div>
+          <article class="compareSide right"><span>${escapeHtml(labels[j])}</span>${itemDescription(items[j])}</article>
+        </div>`;
+    }
+  }
+  html += `</div>`;
+  setTimeout(()=>{
+    document.querySelectorAll(".compareCard").forEach(row=>{
+      const input=row.querySelector(".pairSlider");
+      const val=row.querySelector(".pairValue");
+      function clean(raw){ let x=Number(raw); if(x===0)x=1; if(x===-1)x=-2; if(x<0)x=Math.max(-9,Math.min(-2,x)); else x=Math.max(1,Math.min(9,x)); return x; }
+      input.addEventListener("input",()=>{ const x=clean(input.value); input.value=x; val.textContent=x; });
+      input.addEventListener("change",()=>{ const x=clean(input.value); onUpdate(setPairwise(A, Number(row.dataset.i), Number(row.dataset.j), x)); });
+    });
+  },0);
+  return html;
+}
 
-function wireCommon(st){ document.querySelectorAll('.navLink').forEach(a=>{ if(a.getAttribute('href')===location.pathname.split('/').pop()) a.classList.add('active'); }); const reset=document.getElementById('btnReset'); if(reset) reset.addEventListener('click',()=>{ sessionStorage.removeItem(STORAGE_KEY); location.href='index.html'; }); const exp=document.getElementById('btnExport'); if(exp) exp.addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(st,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='cyros_ahp_results.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }); }
-function main(){ const st=loadState(); wireCommon(st); setStatus(st); const page=document.body.dataset.page; if(page==='overview') renderOverview(st); if(page==='criteria') renderCriteriaPage(st); if(page==='policies') renderPoliciesPage(st); if(page==='results') renderResultsPage(st); setStatus(st); }
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', main); else main();
+function matrixSvg(title, labels, A){
+  const n=labels.length;
+  const cell = n >= 5 ? 66 : n === 4 ? 78 : 88;
+  const left = 185, top = 112;
+  const width = left + n*cell + 22;
+  const height = top + n*cell + 24;
+  let maxAbs=0;
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++) maxAbs=Math.max(maxAbs, Math.abs(Math.log(A[i][j])));
+  if(maxAbs===0) maxAbs=1;
+  function color(v){
+    const t=Math.min(1,Math.abs(Math.log(v))/maxAbs);
+    if(Math.abs(v-1)<1e-8) return "#ffffff";
+    if(v>1) return `rgba(44, 132, 154, ${0.28 + t*0.60})`; // row preferred
+    return `rgba(221, 137, 83, ${0.24 + t*0.55})`; // column preferred
+  }
+  function short(s){ return s.length>26 ? s.slice(0,24)+"…" : s; }
+  const cols = labels.map((l,j)=>`<g transform="translate(${left+j*cell+cell/2},88) rotate(-32)"><text class="mLabel col" text-anchor="start">${escapeHtml(short(l))}</text></g>`).join("");
+  const rows = labels.map((l,i)=>`<text class="mLabel row" x="${left-16}" y="${top+i*cell+cell/2+5}" text-anchor="end">${escapeHtml(short(l))}</text>`).join("");
+  let cells="";
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+    const x=left+j*cell, y=top+i*cell;
+    cells += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="10" fill="${color(A[i][j])}" stroke="#d8dee8"/><text class="mVal" x="${x+cell/2}" y="${y+cell/2+6}" text-anchor="middle">${A[i][j] >= 1 ? A[i][j].toFixed(A[i][j]===1?0:2) : A[i][j].toFixed(2)}</text>`;
+  }
+  return `<div class="matrixPanel"><div class="matrixHead"><div><h3>${escapeHtml(title)}</h3><p>Pairwise comparison matrix</p></div><button class="infoBtn" title="Values above 1 indicate preference for the row element over the column element. Values below 1 indicate the opposite.">ⓘ</button></div><div class="svgScroller"><svg class="matrixSvg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(title)}"><text class="axisHint" x="${left}" y="28">${escapeHtml(title)}</text>${cols}${rows}${cells}</svg></div></div>`;
+}
+
+function renderCriteria(){
+  const solve = ahpSolve(state.criteriaMatrix);
+  const labels = CONFIG.criteria.map(c=>c.name);
+  app.innerHTML = `
+    <section class="sectionTitle"><span>Step 1</span><h2>Criteria weighting</h2><p>Compare the evaluation criteria using Saaty's scale.</p></section>
+    <div class="twoCol">
+      <section class="card">
+        <h2>Criteria comparisons</h2>
+        ${pairwiseEditor(labels, CONFIG.criteria, state.criteriaMatrix, B=>{state.criteriaMatrix=B; renderCriteria();})}
+      </section>
+      <section class="card sticky">
+        <div class="statusBadge ${crLabel(solve.cr).cls}">${crLabel(solve.cr).text}</div>
+        ${matrixSvg("Criteria", labels, state.criteriaMatrix)}
+        ${weightsList("Criteria weights", labels, solve.weights)}
+      </section>
+    </div>
+    <div class="pager"><button class="btn ghost" data-route="overview">Back</button><button class="btn primary" data-route="policies">Continue to policies</button></div>
+  `;
+}
+
+function weightsList(title, labels, weights){
+  const rows=labels.map((l,i)=>({label:l, value:weights[i]})).sort((a,b)=>b.value-a.value);
+  return `<div class="miniTable"><h3>${escapeHtml(title)}</h3>${rows.map((r,idx)=>`<div><span>${idx+1}. ${escapeHtml(r.label)}</span><strong>${(r.value*100).toFixed(1)}%</strong></div>`).join("")}</div>`;
+}
+
+function policyTabs(){ return `<div class="policyTabs">${CONFIG.policies.map((p,i)=>`<button class="policyTab ${i===state.activePolicy?'active':''}" data-policy="${i}">${iconSvg(p.icon)}<span>${p.code}</span></button>`).join("")}</div>`; }
+function criterionTabs(){ return `<div class="criterionTabs">${CONFIG.criteria.map((c,i)=>`<button class="criterionTab ${i===state.activeActionCriterion?'active':''}" data-criterion="${i}">${escapeHtml(c.name)}</button>`).join("")}</div>`; }
+
+function renderPolicies(){
+  const p = CONFIG.policies[state.activePolicy];
+  const pm = state.policyMatrices[state.activePolicy];
+  const cidx = state.activeActionCriterion;
+  const A = pm.actionMatrices[cidx];
+  const solve = ahpSolve(A);
+  const labels = p.actions.map(a=>`${a.code} ${a.name}`);
+  app.innerHTML = `
+    <section class="sectionTitle"><span>Step 2</span><h2>Policy assessment</h2><p>Compare actions within each policy area under each criterion.</p></section>
+    ${policyTabs()}
+    <section class="policyHero card">
+      <div class="policyIcon">${iconSvg(p.icon)}</div>
+      <div><span class="eyebrow">${escapeHtml(p.code)}</span><h2>${escapeHtml(p.name)}</h2><p>${escapeHtml(p.objective)}</p></div>
+    </section>
+    ${criterionTabs()}
+    <div class="twoCol">
+      <section class="card">
+        <h2>${escapeHtml(CONFIG.criteria[cidx].name)} comparisons</h2>
+        ${pairwiseEditor(labels, p.actions, A, B=>{pm.actionMatrices[cidx]=B; renderPolicies();})}
+      </section>
+      <section class="card sticky">
+        <div class="statusBadge ${crLabel(solve.cr).cls}">${crLabel(solve.cr).text}</div>
+        ${matrixSvg(`${p.code} · ${CONFIG.criteria[cidx].name}`, labels, A)}
+        ${weightsList("Action weights", labels, solve.weights)}
+      </section>
+    </div>
+    <div class="pager"><button class="btn ghost" data-route="criteria">Back to criteria</button><button class="btn primary" data-route="results">View results</button></div>
+  `;
+  setTimeout(()=>{
+    document.querySelectorAll("[data-policy]").forEach(b=>b.addEventListener("click",()=>{state.activePolicy=Number(b.dataset.policy); state.activeActionCriterion=0; renderPolicies();}));
+    document.querySelectorAll("[data-criterion]").forEach(b=>b.addEventListener("click",()=>{state.activeActionCriterion=Number(b.dataset.criterion); renderPolicies();}));
+  },0);
+}
+
+function computePolicy(pidx){
+  const p=CONFIG.policies[pidx];
+  const crit=ahpSolve(state.criteriaMatrix);
+  const pm=state.policyMatrices[pidx];
+  const actionSolves=pm.actionMatrices.map(A=>ahpSolve(A));
+  const scores=p.actions.map((a,i)=>CONFIG.criteria.reduce((s,c,j)=>s + crit.weights[j]*actionSolves[j].weights[i],0));
+  const ranking=p.actions.map((a,i)=>({code:a.code,name:a.name,score:scores[i]})).sort((a,b)=>b.score-a.score);
+  const crs=actionSolves.map(s=>s.cr);
+  return {p, critWeights:crit.weights, actionSolves, scores, ranking, avgCR:crs.reduce((a,b)=>a+b,0)/crs.length};
+}
+function horizontalChart(rows){
+  const max=Math.max(...rows.map(r=>r.score),0.00001);
+  return `<div class="hChart">${rows.map((r,i)=>`<div class="hRow ${i===0?'top':''}"><div class="hLabel"><b>${i+1}</b><span>${escapeHtml(r.code)} ${escapeHtml(r.name)}</span></div><div class="hBarWrap"><div class="hBar" style="width:${(r.score/max*100).toFixed(2)}%"></div></div><strong>${(r.score*100).toFixed(1)}%</strong></div>`).join("")}</div>`;
+}
+function resultsTable(rows){ return `<table class="rankTable"><thead><tr><th>Rank</th><th>Action</th><th>Priority</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.code)} ${escapeHtml(r.name)}</td><td>${(r.score*100).toFixed(1)}%</td></tr>`).join("")}</tbody></table>`; }
+
+function renderResults(){
+  const crit=ahpSolve(state.criteriaMatrix);
+  const blocks=CONFIG.policies.map((p,idx)=>{
+    const res=computePolicy(idx);
+    return `<section class="resultBlock card">
+      <div class="resultHead"><div class="policyIcon smallIcon">${iconSvg(p.icon)}</div><div><span class="eyebrow">${escapeHtml(p.code)}</span><h2>${escapeHtml(p.name)}</h2><p>Final action priority ranking</p></div><div class="statusBadge ${crLabel(res.avgCR).cls}">Average CR ${res.avgCR.toFixed(3)}</div></div>
+      ${horizontalChart(res.ranking)}
+      ${resultsTable(res.ranking)}
+    </section>`;
+  }).join("");
+  app.innerHTML = `
+    <section class="sectionTitle"><span>Step 3</span><h2>Results dashboard</h2><p>Report-ready rankings for Deliverable D.3.2.1 policy recommendations.</p></section>
+    <section class="card deliverableBox"><h2>Deliverable-ready summary</h2><p>The AHP assessment provides a transparent prioritisation of policy actions supporting the Adriatic-Ionian Cycling Corridor. The results below can be used to structure Section 3, Key policy recommendations, and Section 4, Conclusions and key recommendations.</p></section>
+    <section class="card">${weightsList("Criteria weights", CONFIG.criteria.map(c=>c.name), crit.weights)}</section>
+    ${blocks}
+  `;
+}
+
+function exportJson(){
+  const out={ problem:CONFIG.problem, criteria:CONFIG.criteria, policies:CONFIG.policies, criteriaMatrix:state.criteriaMatrix, policyMatrices:state.policyMatrices, generatedAt:new Date().toISOString() };
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="cyros_ahp_results.json"; a.click(); URL.revokeObjectURL(url);
+}
+function reset(){ state=makeState(); render(); }
+
+const app=document.getElementById("app");
+function render(){
+  updateNav();
+  const r=route();
+  if(r==="criteria") renderCriteria();
+  else if(r==="policies") renderPolicies();
+  else if(r==="results") renderResults();
+  else renderOverview();
+  document.querySelectorAll("[data-route]").forEach(el=>el.onclick=()=>setRoute(el.dataset.route));
+}
+window.addEventListener("hashchange", render);
+document.getElementById("btnReset").addEventListener("click", reset);
+document.getElementById("btnExport").addEventListener("click", exportJson);
+render();
