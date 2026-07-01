@@ -67,81 +67,30 @@ body,h1,h2,h3,h4,h5,h6,button,input,select,textarea,table,th,td,.btn,.panelTitle
   font-family:'Avenir Next LT Pro', Arial, sans-serif !important;
 }
 
-.assessmentProgress{
-  border:1px solid var(--line);
-  border-radius:22px;
-  background:rgba(255,255,255,.92);
-  padding:14px;
-  margin-bottom:18px;
-  box-shadow:0 12px 30px rgba(16,33,61,.08);
+
+/* Release 1.1, minimal assessment progress and policy tutorial */
+.progressList.minimal{
+  display:grid;
+  grid-template-columns:repeat(12, minmax(10px, 1fr));
+  gap:6px;
+  margin:0 0 18px;
+  padding:0;
 }
-.progressTop{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-  margin-bottom:10px;
-  color:var(--text);
-}
-.progressTop span{
+.progressList.minimal .progressSegment{
   display:block;
-  color:var(--muted);
-  font-size:12px;
-  font-weight:700;
-  margin-top:3px;
-}
-.progressTrack{
-  height:9px;
-  background:#F0E8E2;
+  height:7px;
   border-radius:999px;
-  overflow:hidden;
-  margin-bottom:12px;
+  background:rgba(255,255,255,.70);
+  border:1px solid rgba(16,33,61,.10);
+  box-shadow:none;
 }
-.progressTrack > div{
-  height:100%;
-  border-radius:999px;
-  background:linear-gradient(90deg,var(--orange),var(--blue));
-  transition:width .25s ease;
+.progressList.minimal .progressSegment.done{
+  background:var(--blue);
+  border-color:rgba(31,111,139,.35);
 }
-.progressMap{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-}
-.progressMap .progressItem{
-  margin:0;
-  padding:7px 9px;
-  font-size:11px;
-  border-radius:999px;
-  width:auto;
-}
-.progressMap .progressItem.todo{
-  background:#fff;
-  border-color:var(--line);
-  color:var(--muted);
-}
-.progressMap .progressItem.todo span{
-  background:#F5F0EC;
-  color:var(--muted);
-}
-.progressMap .progressItem.done{
-  background:#F2FAF5;
-  border-color:rgba(22,128,60,.25);
-  color:var(--text);
-}
-.progressMap .progressItem.done span{
-  background:var(--ok);
-  color:#fff;
-}
-.progressMap .progressItem.active{
-  background:#FFF7F0;
-  border-color:rgba(214,129,69,.38);
-  color:var(--text);
-  box-shadow:0 8px 18px rgba(214,129,69,.12);
-}
-.progressMap .progressItem.active span{
-  background:var(--orange);
-  color:#fff;
+.progressList.minimal .progressSegment.current{
+  outline:2px solid rgba(214,129,69,.35);
+  outline-offset:2px;
 }
 .tutorialOverlay{
   position:fixed;
@@ -149,87 +98,59 @@ body,h1,h2,h3,h4,h5,h6,button,input,select,textarea,table,th,td,.btn,.panelTitle
   z-index:9999;
   display:grid;
   place-items:center;
-  padding:18px;
-  background:rgba(16,33,61,.42);
+  padding:24px;
+  background:rgba(16,33,61,.54);
   backdrop-filter:blur(6px);
 }
 .tutorialModal{
-  width:min(640px,100%);
+  width:min(640px, 100%);
+  max-height:calc(100vh - 48px);
+  overflow:auto;
   background:#fff;
-  border:1px solid rgba(255,255,255,.72);
-  border-radius:28px;
-  box-shadow:0 30px 80px rgba(16,33,61,.24);
-  padding:28px;
   color:var(--text);
+  border-radius:24px;
+  border:1px solid rgba(16,33,61,.12);
+  box-shadow:0 28px 80px rgba(16,33,61,.32);
+  padding:28px;
 }
 .tutorialIcon{
-  width:42px;
-  height:42px;
+  width:38px;
+  height:38px;
+  border-radius:999px;
   display:grid;
   place-items:center;
-  border-radius:16px;
-  background:#F7EDE9;
-  color:var(--primary-dark);
+  margin-bottom:14px;
+  color:#fff;
+  background:var(--orange);
   font-weight:900;
-  margin-bottom:12px;
+  font-family:"Avenir Next LT Pro", "Avenir Next", Arial, sans-serif;
 }
 .tutorialModal h2{
   margin:0 0 12px;
-  font-size:28px;
-  letter-spacing:-.3px;
+  font-size:26px;
+  line-height:1.15;
 }
 .tutorialModal p{
-  color:var(--muted);
-  line-height:1.55;
   margin:10px 0;
+  line-height:1.55;
+  color:var(--text);
 }
-.tutorialSliderGuide{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin:16px 0;
+.tutorialModal ul{
+  margin:8px 0 14px;
+  padding-left:22px;
 }
-.tutorialSliderGuide div{
-  border:1px solid var(--line);
-  border-radius:18px;
-  background:#FBFAF8;
-  padding:12px;
+.tutorialModal li{
+  margin:6px 0;
+  line-height:1.45;
 }
-.tutorialSliderGuide strong{
-  display:block;
-  margin-bottom:4px;
-}
-.tutorialSliderGuide span{
-  display:block;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.35;
-}
-.tutorialModal .btn{
-  margin-top:10px;
-  width:100%;
+.tutorialStart{
+  margin-top:12px;
+  width:auto;
+  min-width:180px;
 }
 @media(max-width:980px){
-  .progressMap{max-height:160px;overflow:auto;padding-right:2px}
-  .tutorialModal{padding:22px;border-radius:24px}
-  .tutorialSliderGuide{grid-template-columns:1fr}
-}
-
-/* Minimal assessment progress bar */
-.assessmentProgress.minimal{
-  border:0;
-  border-radius:999px;
-  background:transparent;
-  padding:0;
-  margin:0 0 18px;
-  box-shadow:none;
-}
-.assessmentProgress.minimal .progressTrack{
-  height:7px;
-  margin:0;
-  background:rgba(255,255,255,.70);
-  border:1px solid rgba(16,33,61,.08);
-}
-.assessmentProgress.minimal .progressTrack > div{
-  background:linear-gradient(90deg,var(--orange),var(--blue));
+  .progressList.minimal{grid-template-columns:repeat(12, minmax(5px, 1fr)); gap:4px;}
+  .progressList.minimal .progressSegment{height:6px;}
+  .tutorialModal{padding:22px; border-radius:20px;}
+  .tutorialModal h2{font-size:22px;}
 }
