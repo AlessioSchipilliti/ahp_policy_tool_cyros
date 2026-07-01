@@ -637,3 +637,166 @@ canvas.resultChart{
     flex-direction: column;
   }
 }
+
+
+/* ---- Restored CYROS / ITL branding ---- */
+:root{
+  --bg:#af5843;
+  --brand-blue:#25317f;
+  --brand-blue-dark:#0d2d5f;
+  --accent:#f07f3c;
+  --card:#ffffff;
+  --border:rgba(37,49,127,0.16);
+  --text:#0d244f;
+  --muted:#53607e;
+  --shadow:0 18px 42px rgba(43,23,18,0.16);
+  --blue:var(--brand-blue);
+  --blue2:var(--brand-blue-dark);
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+}
+
+.h1,
+.panelTitle,
+.policyTitle,
+.resultMatrixTitle,
+.priorityChartTitle{
+  color:var(--brand-blue);
+}
+
+.top.brandTop{
+  position:relative;
+  flex-direction:column;
+  align-items:stretch;
+  gap:18px;
+  min-height:auto;
+  padding:24px 28px;
+  border-color:rgba(37,49,127,0.16);
+  background:#ffffff;
+}
+
+.brandHeader{
+  width:100%;
+}
+
+.brandLogos{
+  width:100%;
+  height:96px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:28px;
+  margin-bottom:20px;
+}
+
+.brandLogo{
+  display:block;
+  object-fit:contain;
+}
+
+.interregLogo{
+  width:360px;
+  height:86px;
+  object-position:left center;
+}
+
+.itlLogo{
+  width:300px;
+  height:86px;
+  object-position:right center;
+}
+
+.brandTitleBlock{
+  padding-top:16px;
+  border-top:1px solid rgba(37,49,127,0.18);
+  max-width:760px;
+}
+
+.top.brandTop .topActions{
+  position:absolute;
+  right:22px;
+  bottom:22px;
+  align-items:center;
+}
+
+.top.brandTop .btn,
+.btn{
+  border-color:rgba(37,49,127,0.22);
+  color:var(--brand-blue);
+  background:#ffffff;
+}
+
+.navLink.active,
+.tabBtn.active{
+  border-color:rgba(37,49,127,0.32);
+  background:rgba(37,49,127,0.08);
+  color:var(--brand-blue);
+}
+
+.btn:hover,
+.navLink:hover,
+.tabBtn:hover{
+  background:rgba(37,49,127,0.06);
+  border-color:rgba(37,49,127,0.24);
+}
+
+.card,
+.panel,
+.top,
+.infoCard,
+.policyBlock,
+.policyResult,
+.priorityChart{
+  border-color:rgba(37,49,127,0.16);
+}
+
+.priorityBarRow.isBest .priorityRank,
+.priorityBarRow.isBest .priorityFill{
+  background:#af5843;
+}
+
+.priorityChartBadge{
+  border-color:rgba(175, 88, 67, 0.28);
+  color:#af5843;
+  background:rgba(175, 88, 67, 0.07);
+}
+
+@media (max-width:980px){
+  .brandLogos{
+    height:78px;
+    align-items:center;
+    gap:14px;
+  }
+
+  .interregLogo,
+  .itlLogo{
+    width:calc(50% - 7px);
+    height:72px;
+  }
+
+  .top.brandTop .topActions{
+    position:static;
+  }
+
+  .brandTitleBlock{
+    max-width:none;
+  }
+}
+
+@media (max-width:640px){
+  .brandLogos{
+    height:auto;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .interregLogo,
+  .itlLogo{
+    width:100%;
+    height:74px;
+    object-position:left center;
+  }
+}
