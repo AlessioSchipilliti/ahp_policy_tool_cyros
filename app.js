@@ -1,5 +1,5 @@
 // app.js
-const STORAGE_KEY = "ahp_policy_state_v2";
+const STORAGE_KEY = "ahp_policy_state_v3";
 
 const RI = { 1:0, 2:0, 3:0.58, 4:0.90, 5:1.12, 6:1.24, 7:1.32, 8:1.41, 9:1.45, 10:1.49 };
 
@@ -165,9 +165,10 @@ function normalizeState(st){
   if(validMatrix(st.criteriaMatrix, CRITERIA.length)) fresh.criteriaMatrix = st.criteriaMatrix;
   if(typeof st.activePolicyIdx === "number") fresh.activePolicyIdx = Math.max(0, Math.min(POLICIES.length - 1, st.activePolicyIdx));
 
-  if(Array.isArray(st.policies)){
+  const savedPolicies = Array.isArray(st.policies) ? st.policies : (Array.isArray(st.policyMatrices) ? st.policyMatrices : []);
+  if(savedPolicies.length){
     POLICIES.forEach((policy, pIdx) => {
-      const saved = st.policies.find(x => x && x.id === policy.id) || st.policies[pIdx];
+      const saved = savedPolicies.find(x => x && x.id === policy.id) || savedPolicies[pIdx];
       if(!saved) return;
       const nA = policy.actions.length;
       if(Array.isArray(saved.actionMatrices) && saved.actionMatrices.length === CRITERIA.length){
@@ -401,79 +402,43 @@ function drawMatrixHeatmap(containerId, labels, A){
   host.innerHTML = svg;
 }
 
-function drawBarChart(canvasId, title, items){
-  const c = document.getElementById(canvasId);
-  if(!c) return;
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = c.clientWidth || 900;
-  const cssH = c.clientHeight || 300;
-  c.width = Math.round(cssW * dpr);
-  c.height = Math.round(cssH * dpr);
-  const ctx = c.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cssW, cssH);
+function renderPriorityChart(containerId, title, items){
+  const root = document.getElementById(containerId);
+  if(!root) return;
 
-  const rows = items.slice().sort((a,b)=>b.value-a.value);
+  const rows = items
+    .slice()
+    .sort((a,b)=>b.value-a.value)
+    .map((x, i)=>({ ...x, rank: i + 1, percent: x.value * 100 }));
   const maxV = Math.max(...rows.map(x => x.value), 0.00001);
-  const left = 210;
-  const right = 86;
-  const top = 66;
-  const rowH = 44;
-  const gap = 12;
-  const chartW = cssW - left - right;
 
-  ctx.fillStyle = "#0b1f45";
-  ctx.font = "700 17px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-  ctx.fillText(title, 18, 28);
-  ctx.fillStyle = "#5f6f8a";
-  ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-  ctx.fillText("Action priority ranking", 18, 48);
-
-  rows.forEach((x, i)=>{
-    const y = top + i * (rowH + gap);
-    const barW = (x.value / maxV) * chartW;
-    const isBest = i === 0;
-
-    ctx.fillStyle = "#f4f6fb";
-    roundRect(ctx, left, y, chartW, rowH, 12);
-    ctx.fill();
-
-    ctx.fillStyle = isBest ? "#af5843" : "#112d5b";
-    roundRect(ctx, left, y, Math.max(8, barW), rowH, 12);
-    ctx.fill();
-
-    ctx.fillStyle = "#0b1f45";
-    ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-    const label = x.name.length > 28 ? x.name.slice(0, 25) + "..." : x.name;
-    ctx.fillText(label, left - 14, y + rowH / 2);
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#0b1f45";
-    ctx.font = "800 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-    ctx.fillText(`${(x.value * 100).toFixed(1)}%`, left + barW + 10, y + rowH / 2);
-
-    if(isBest){
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "800 11px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("1", left + 16, y + rowH / 2);
-    }
-  });
-  ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
-}
-
-function roundRect(ctx, x, y, w, h, r){
-  const rr = Math.min(r, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + rr, y);
-  ctx.arcTo(x + w, y, x + w, y + h, rr);
-  ctx.arcTo(x + w, y + h, x, y + h, rr);
-  ctx.arcTo(x, y + h, x, y, rr);
-  ctx.arcTo(x, y, x + w, y, rr);
-  ctx.closePath();
+  root.innerHTML = `
+    <div class="priorityChartInner">
+      <div class="priorityChartHead">
+        <div>
+          <div class="priorityChartTitle">${escapeHtml(title)}</div>
+          <div class="priorityChartSubtitle">Action priority ranking</div>
+        </div>
+        <div class="priorityChartBadge">AHP weights</div>
+      </div>
+      <div class="priorityBars">
+        ${rows.map(row => {
+          const width = Math.max(3, (row.value / maxV) * 100);
+          const isBest = row.rank === 1;
+          return `
+            <div class="priorityBarRow ${isBest ? "isBest" : ""}">
+              <div class="priorityRank">${row.rank}</div>
+              <div class="priorityLabel"><span>${escapeHtml(row.name)}</span></div>
+              <div class="priorityTrack" aria-label="${escapeHtml(row.name)} ${row.percent.toFixed(1)}%">
+                <div class="priorityFill" style="width:${width.toFixed(2)}%"></div>
+              </div>
+              <div class="priorityValue">${row.percent.toFixed(1)}%</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
 }
 
 function shortLabel(label){
@@ -816,7 +781,7 @@ function renderResultsPage(st){
               ${rankingTable(res.ranking)}
             </div>
             <div>
-              <canvas class="chart resultChart" id="chart_${policy.id}" width="900" height="320"></canvas>
+              <div class="priorityChart" id="chart_${policy.id}"></div>
             </div>
           </div>
         </div>
@@ -827,7 +792,7 @@ function renderResultsPage(st){
   setTimeout(()=>{
     POLICIES.forEach((policy, pIdx)=>{
       const res = computePolicyResults(st, pIdx);
-      drawBarChart(`chart_${policy.id}`, `${policy.code}. ${policy.name}`, policy.actions.map((a, i) => ({ name: `${a.code} ${a.name}`, value: res.scores[i] })));
+      renderPriorityChart(`chart_${policy.id}`, `${policy.code}. ${policy.name}`, policy.actions.map((a, i) => ({ name: `${a.code} ${a.name}`, value: res.scores[i] })));
     });
   }, 0);
 }

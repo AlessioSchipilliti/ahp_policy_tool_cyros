@@ -513,3 +513,127 @@ canvas.resultChart{
   canvas.chart,
   canvas.resultChart{ height: 300px; }
 }
+
+/* ---- Editorial horizontal priority charts ---- */
+.priorityChart{
+  min-height: 310px;
+  border: 1px solid #d8dfed;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  padding: 14px;
+}
+
+.priorityChartInner{
+  display: grid;
+  gap: 14px;
+}
+
+.priorityChartHead{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.priorityChartTitle{
+  font-weight: 800;
+  color: #0b1f45;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.priorityChartSubtitle{
+  margin-top: 3px;
+  color: #5f6f8a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.priorityChartBadge{
+  white-space: nowrap;
+  border: 1px solid rgba(175, 88, 67, 0.28);
+  color: #af5843;
+  background: rgba(175, 88, 67, 0.07);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priorityBars{
+  display: grid;
+  gap: 11px;
+}
+
+.priorityBarRow{
+  display: grid;
+  grid-template-columns: 28px minmax(150px, 230px) minmax(160px, 1fr) 56px;
+  gap: 10px;
+  align-items: center;
+}
+
+.priorityRank{
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #eef2f8;
+  color: #112d5b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.priorityBarRow.isBest .priorityRank{
+  background: #af5843;
+  color: #ffffff;
+}
+
+.priorityLabel{
+  color: #0b1f45;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.22;
+}
+
+.priorityTrack{
+  height: 28px;
+  border-radius: 999px;
+  background: #f0f3f8;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(17, 45, 91, 0.08);
+}
+
+.priorityFill{
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #173a72, #112d5b);
+}
+
+.priorityBarRow.isBest .priorityFill{
+  background: linear-gradient(90deg, #d07962, #af5843);
+}
+
+.priorityValue{
+  text-align: right;
+  color: #0b1f45;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+@media (max-width: 720px){
+  .priorityBarRow{
+    grid-template-columns: 26px 1fr 52px;
+    gap: 8px;
+  }
+  .priorityTrack{
+    grid-column: 2 / 4;
+  }
+  .priorityChartHead{
+    flex-direction: column;
+  }
+}
